@@ -4,6 +4,19 @@ version = "0.1.0"
 authors = ["Enrico Risa <enrico.risa@gmail.com>"]
 edition = "2018"
 license = "Apache-2.0"
+description= "A Rust client for OrientDB™"
+repository = "https://github.com/wolf4ood/orientdb-rs"
+keywords = ["database", "graphs","orientdb"]
+categories = ["database"]
+readme = "README.md"
+
+
+
+[badges]
+travis-ci = { repository = "wolf4ood/orientdb-rs" }
+is-it-maintained-issue-resolution = { repository = "wolf4ood/orientdb-rs" }
+is-it-maintained-open-issues = { repository = "wolf4ood/orientdb-rs" }
+maintenance = {status = "actively-developed"}
 
 [dependencies]
 chrono = "0.4.7"
