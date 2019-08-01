@@ -1,9 +1,9 @@
 use dotenv::dotenv;
 use std::env;
 
-use orientdb::DatabaseType;
-use orientdb::OSession;
-use orientdb::OrientDB;
+use orientdb_client::DatabaseType;
+use orientdb_client::OSession;
+use orientdb_client::OrientDB;
 
 #[derive(Debug)]
 pub struct OrientDBTest {

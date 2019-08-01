@@ -1,6 +1,6 @@
-extern crate orientdb;
+extern crate orientdb_client;
 
-use orientdb::{DatabaseType, OrientDB};
+use orientdb_client::{DatabaseType, OrientDB};
 
 #[derive(Debug)]
 struct Person {

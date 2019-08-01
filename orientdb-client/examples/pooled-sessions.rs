@@ -1,6 +1,6 @@
-extern crate orientdb;
+extern crate orientdb_client;
 
-use orientdb::{DatabaseType, OrientDB};
+use orientdb_client::{DatabaseType, OrientDB};
 use std::thread;
 
 #[allow(unused_must_use)]

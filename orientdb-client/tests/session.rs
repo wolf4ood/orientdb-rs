@@ -1,8 +1,8 @@
-use orientdb::types::resultset::ResultSet;
+use orientdb_client::types::resultset::ResultSet;
 
-use orientdb::types::value::{EmbeddedMap, OValue};
-use orientdb::types::ODocument;
-use orientdb::OSession;
+use orientdb_client::types::value::{EmbeddedMap, OValue};
+use orientdb_client::types::ODocument;
+use orientdb_client::OSession;
 mod common;
 
 use common::{run_with_session, session};

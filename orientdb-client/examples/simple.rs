@@ -1,6 +1,6 @@
-extern crate orientdb;
+extern crate orientdb_client;
 
-use orientdb::OrientDB;
+use orientdb_client::OrientDB;
 
 #[allow(unused_must_use)]
 fn main() {

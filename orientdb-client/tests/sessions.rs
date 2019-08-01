@@ -1,5 +1,5 @@
 extern crate dotenv;
-extern crate orientdb;
+extern crate orientdb_client;
 
 mod common;
 

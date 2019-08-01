@@ -1,11 +1,11 @@
 extern crate dotenv;
-extern crate orientdb;
+extern crate orientdb_client;
 
 mod common;
 
 use common::connect;
 
-use orientdb::DatabaseType;
+use orientdb_client::DatabaseType;
 
 #[test]
 fn test_client_connect_close() {

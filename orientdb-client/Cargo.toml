@@ -1,5 +1,5 @@
 [package]
-name = "orientdb"
+name = "orientdb-client"
 version = "0.1.0"
 authors = ["Enrico Risa <enrico.risa@gmail.com>"]
 edition = "2018"
