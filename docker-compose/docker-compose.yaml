@@ -1,0 +1,9 @@
+version: "3"
+services:
+  orientdb:
+    image: orientdb:${ORIENTDB_VERSION} 
+    environment: 
+      - ORIENTDB_ROOT_PASSWORD=${ORIENTDB_ROOT_PASSWORD}
+    ports:
+      - "2424:2424"
+      - "2480:2480"
