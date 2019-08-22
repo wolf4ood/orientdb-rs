@@ -1,4 +1,4 @@
-use orientdb_client::types::resultset::ResultSet;
+use orientdb_client::sync::types::resultset::ResultSet;
 
 use orientdb_client::types::value::{EmbeddedMap, OValue};
 use orientdb_client::types::ODocument;

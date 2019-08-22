@@ -1,7 +1,7 @@
 use super::session::OSession;
 use crate::common::protocol::messages::request::Query;
 use crate::common::types::value::{IntoOValue, OValue};
-use crate::types::resultset::ResultSet;
+use crate::sync::types::resultset::ResultSet;
 use crate::OrientResult;
 use std::collections::HashMap;
 
@@ -37,7 +37,7 @@ impl<'a> Statement<'a> {
         self
     }
 
-    pub fn positional(mut self, params: &[&IntoOValue]) -> Self {
+    pub fn positional(mut self, params: &[&dyn IntoOValue]) -> Self {
         let mut p = HashMap::new();
         for (i, elem) in params.iter().enumerate() {
             p.insert(i.to_string(), elem.into_ovalue());
@@ -46,7 +46,7 @@ impl<'a> Statement<'a> {
         self.named = false;
         self
     }
-    pub fn named(mut self, params: &[(&str, &IntoOValue)]) -> Self {
+    pub fn named(mut self, params: &[(&str, &dyn IntoOValue)]) -> Self {
         self.params = params
             .iter()
             .map(|&(k, ref v)| (String::from(k), v.into_ovalue()))

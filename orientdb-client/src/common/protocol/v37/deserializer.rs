@@ -9,7 +9,9 @@ use crate::common::types::bag::RidBag;
 use crate::common::types::document::ODocument;
 use crate::common::types::projection::Projection;
 use crate::common::types::value::OValue;
-use crate::common::{OrientCommonError, OrientCommonResult};
+
+use crate::{OrientResult,OrientError};
+
 use chrono::TimeZone;
 use chrono::Utc;
 use nom::IResult;
@@ -19,15 +21,15 @@ use nom::{cond, do_parse, many_m_n, named, try_parse};
 use std::collections::HashMap;
 
 impl DocumentDeserializer for Protocol37 {
-    fn decode_document(input: &[u8]) -> OrientCommonResult<ODocument> {
+    fn decode_document(input: &[u8]) -> OrientResult<ODocument> {
         let (rm, doc) = parse_document(input)
-            .map_err(|e| OrientCommonError::Decoder(format!("Error decoding document: {:?}", e)))?;
+            .map_err(|e| OrientError::Decoder(format!("Error decoding document: {:?}", e)))?;
         assert_eq!(rm.len(), 0);
         Ok(doc)
     }
-    fn decode_projection(input: &[u8]) -> OrientCommonResult<Projection> {
+    fn decode_projection(input: &[u8]) -> OrientResult<Projection> {
         let (rm, projection) = parse_projection(input).map_err(|e| {
-            OrientCommonError::Decoder(format!("Error decoding projection: {:?}", e))
+            OrientError::Decoder(format!("Error decoding projection: {:?}", e))
         })?;
         assert_eq!(rm.len(), 0);
         Ok(projection)

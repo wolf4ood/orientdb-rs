@@ -6,7 +6,7 @@ use crate::common::protocol::constants;
 use crate::common::types::bag::RidBag;
 use crate::common::types::document::ODocument;
 use crate::common::types::rid::ORecordID;
-use crate::common::{OrientCommonError, OrientCommonResult};
+use crate::common::{OrientError, OrientResult};
 
 pub type DateTime = chrono::DateTime<offset::Utc>;
 pub type Date = chrono::Date<offset::Utc>;
@@ -164,19 +164,19 @@ impl OValue {
 }
 
 pub trait FromOValue {
-    fn from_value(ty: &OValue) -> OrientCommonResult<Self>
+    fn from_value(ty: &OValue) -> OrientResult<Self>
     where
         Self: Sized;
 }
 
 impl FromOValue for i32 {
-    fn from_value(ty: &OValue) -> OrientCommonResult<Self>
+    fn from_value(ty: &OValue) -> OrientResult<Self>
     where
         Self: Sized,
     {
         match ty {
             OValue::I32(val) => Ok(*val),
-            _ => Err(OrientCommonError::Conversion(format!(
+            _ => Err(OrientError::Conversion(format!(
                 "Cannot convert {:?} to i32",
                 ty
             ))),
@@ -185,13 +185,13 @@ impl FromOValue for i32 {
 }
 
 impl FromOValue for String {
-    fn from_value(ty: &OValue) -> OrientCommonResult<Self>
+    fn from_value(ty: &OValue) -> OrientResult<Self>
     where
         Self: Sized,
     {
         match ty {
             OValue::String(val) => Ok(val.clone()),
-            _ => Err(OrientCommonError::Conversion(format!(
+            _ => Err(OrientError::Conversion(format!(
                 "Cannot convert {:?} to String",
                 ty
             ))),
@@ -200,13 +200,13 @@ impl FromOValue for String {
 }
 
 impl FromOValue for ODocument {
-    fn from_value(ty: &OValue) -> OrientCommonResult<Self>
+    fn from_value(ty: &OValue) -> OrientResult<Self>
     where
         Self: Sized,
     {
         match ty {
             OValue::Document(val) => Ok(val.clone()),
-            _ => Err(OrientCommonError::Conversion(format!(
+            _ => Err(OrientError::Conversion(format!(
                 "Cannot convert {:?} to ODocument",
                 ty
             ))),
@@ -215,13 +215,13 @@ impl FromOValue for ODocument {
 }
 
 impl FromOValue for EmbeddedMap {
-    fn from_value(ty: &OValue) -> OrientCommonResult<Self>
+    fn from_value(ty: &OValue) -> OrientResult<Self>
     where
         Self: Sized,
     {
         match ty {
             OValue::EmbeddedMap(val) => Ok(val.clone()),
-            _ => Err(OrientCommonError::Conversion(format!(
+            _ => Err(OrientError::Conversion(format!(
                 "Cannot convert {:?} to EmbeddedMap",
                 ty
             ))),
@@ -230,13 +230,13 @@ impl FromOValue for EmbeddedMap {
 }
 
 impl FromOValue for bool {
-    fn from_value(ty: &OValue) -> OrientCommonResult<Self>
+    fn from_value(ty: &OValue) -> OrientResult<Self>
     where
         Self: Sized,
     {
         match ty {
             OValue::Boolean(val) => Ok(*val),
-            _ => Err(OrientCommonError::Conversion(format!(
+            _ => Err(OrientError::Conversion(format!(
                 "Cannot convert {:?} to &str",
                 ty
             ))),

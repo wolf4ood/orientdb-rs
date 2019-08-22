@@ -3,17 +3,17 @@ use super::Protocol37;
 use crate::common::protocol::serializer::DocumentSerializer;
 use crate::common::types::document::ODocument;
 use crate::common::types::value::OValue;
-use crate::common::OrientCommonResult;
+use crate::common::OrientResult;
 
 impl DocumentSerializer for Protocol37 {
-    fn encode_document(doc: &ODocument) -> OrientCommonResult<OBuffer> {
+    fn encode_document(doc: &ODocument) -> OrientResult<OBuffer> {
         let mut doc_buf = OBuffer::new();
         encode_document(doc, &mut doc_buf)?;
         Ok(doc_buf)
     }
 }
 
-fn encode_document(doc: &ODocument, buf: &mut OBuffer) -> OrientCommonResult<()> {
+fn encode_document(doc: &ODocument, buf: &mut OBuffer) -> OrientResult<()> {
     buf.write_string(doc.class_name())?;
     buf.write_varint(doc.len() as i64)?;
 
@@ -22,7 +22,7 @@ fn encode_document(doc: &ODocument, buf: &mut OBuffer) -> OrientCommonResult<()>
     }
     Ok(())
 }
-fn write_field<'a>(buf: &mut OBuffer, name: &'a str, value: &'a OValue) -> OrientCommonResult<()> {
+fn write_field<'a>(buf: &mut OBuffer, name: &'a str, value: &'a OValue) -> OrientResult<()> {
     buf.write_string(name)?;
 
     buf.put_i8(value.get_type_id())?;
@@ -32,7 +32,7 @@ fn write_field<'a>(buf: &mut OBuffer, name: &'a str, value: &'a OValue) -> Orien
     Ok(())
 }
 
-fn write_value<'a>(buf: &mut OBuffer, owner: &'a str, value: &'a OValue) -> OrientCommonResult<()> {
+fn write_value<'a>(buf: &mut OBuffer, owner: &'a str, value: &'a OValue) -> OrientResult<()> {
     match value {
         OValue::String(ref s) => buf.write_string(s),
         OValue::Boolean(v) => {

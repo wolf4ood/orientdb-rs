@@ -12,6 +12,14 @@ readme = "README.md"
 
 
 
+[features]
+
+default = []
+
+
+async = []
+
+
 [badges]
 travis-ci = { repository = "wolf4ood/orientdb-rs" }
 is-it-maintained-issue-resolution = { repository = "wolf4ood/orientdb-rs" }
@@ -23,6 +31,11 @@ chrono = "0.4.7"
 byteorder = "1.3.2"
 r2d2 = "0.8.5"
 nom = "5.0.0"
+
+async-std =  { version = "0.99.4", optional = true }
+async-trait = { version = "0.1.10", optional = true } 
+
+
 
 
 

@@ -1,6 +1,6 @@
 use crate::common::protocol::messages::request::HandShake;
 use crate::common::protocol::messages::{Request, Response};
-use crate::protocol::WiredProtocol;
+use crate::sync::protocol::WiredProtocol;
 use crate::OrientResult;
 use byteorder::{BigEndian, ReadBytesExt};
 use std::io::Write;
@@ -45,4 +45,6 @@ impl Connection {
         self.send_and_forget(request)?;
         self.protocol.decode(&mut self.stream)
     }
+
+    
 }
