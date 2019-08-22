@@ -3,12 +3,12 @@ use crate::common::protocol::deserializer::DocumentDeserializer;
 use crate::common::protocol::messages::response::{Connect, ExistDB, Header, Open, Query, Status};
 use crate::common::types::error::{OError, RequestError};
 use crate::common::types::OResult;
-use crate::protocol::decoder::VersionedDecoder;
+use crate::sync::protocol::decoder::VersionedDecoder;
 use crate::OrientResult;
 use std::collections::{HashMap, VecDeque};
 use std::io::Read;
 
-use crate::protocol::io::reader;
+use crate::sync::protocol::io::reader;
 
 impl VersionedDecoder for Protocol37 {
     fn decode_header<R: Read>(buf: &mut R) -> OrientResult<Header> {

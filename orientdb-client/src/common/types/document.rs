@@ -1,6 +1,6 @@
 use crate::common::types::rid::ORecordID;
 use crate::common::types::value::{FromOValue, IntoOValue, OValue};
-use crate::common::{OrientCommonError, OrientCommonResult};
+use crate::common::{OrientError, OrientResult};
 use std::collections::hash_map;
 use std::collections::HashMap;
 use std::iter::Iterator;
@@ -88,13 +88,13 @@ impl ODocument {
         self.fields.insert(name.into(), value.into_ovalue());
     }
 
-    pub fn get_checked<T>(&self, name: &str) -> OrientCommonResult<T>
+    pub fn get_checked<T>(&self, name: &str) -> OrientResult<T>
     where
         T: FromOValue,
     {
         match self.get_raw(name) {
             Some(val) => T::from_value(val),
-            None => Err(OrientCommonError::Field(format!(
+            None => Err(OrientError::Field(format!(
                 "Field {} not found.",
                 name
             ))),
@@ -183,7 +183,7 @@ impl<'a, K: 'a, V: 'a> Iterator for Iter<'a, K, V> {
 mod tests {
     use crate::common::types::document::ODocument;
     use crate::common::types::value::OValue;
-    use crate::common::OrientCommonResult;
+    use crate::common::OrientResult;
     use std::error::Error;
 
     #[test]
@@ -210,7 +210,7 @@ mod tests {
         );
         assert_eq!(true, doc.get_checked("confirmed").unwrap());
 
-        let checked: OrientCommonResult<bool> = doc.get_checked("confirmed1");
+        let checked: OrientResult<bool> = doc.get_checked("confirmed1");
 
         assert!(checked.is_err());
 

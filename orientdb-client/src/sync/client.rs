@@ -4,7 +4,7 @@ use crate::common::protocol::messages::request::{
     Close, Connect, CreateDB, DropDB, ExistDB, MsgHeader, Open,
 };
 use crate::common::protocol::messages::response;
-use crate::session::{OSession, SessionPool, SessionPoolManager};
+use crate::sync::session::{OSession, SessionPool, SessionPoolManager};
 use crate::{DatabaseType, OrientResult};
 use std::net::SocketAddr;
 use std::net::ToSocketAddrs;

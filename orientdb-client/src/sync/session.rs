@@ -4,7 +4,7 @@ use super::client::OrientDBClientInternal;
 use super::statement::Statement;
 use crate::common::protocol::messages::request::{Close, Query};
 use crate::common::protocol::messages::response;
-use crate::types::resultset::{PagedResultSet, ResultSet};
+use crate::sync::types::resultset::{PagedResultSet, ResultSet};
 use crate::{OrientError, OrientResult};
 use r2d2::{ManageConnection, Pool, PooledConnection};
 use std::sync::Arc;

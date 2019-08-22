@@ -1,7 +1,7 @@
 use crate::common::protocol::messages::request::{QueryClose, QueryNext};
 use crate::common::protocol::messages::response::Query;
 use crate::common::types::result::OResult;
-use crate::network::cluster::Server;
+use crate::sync::network::cluster::Server;
 use crate::OrientResult;
 use std::sync::Arc;
 

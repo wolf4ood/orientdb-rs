@@ -1,7 +1,7 @@
 use super::document::ODocument;
 use super::projection::Projection;
 use crate::common::types::value::{FromOValue, OValue};
-use crate::common::{OrientCommonError, OrientCommonResult};
+use crate::common::{OrientError, OrientResult};
 
 #[derive(Debug)]
 pub enum ResultType {
@@ -37,13 +37,13 @@ impl OResult {
         }
     }
 
-    pub fn get_checked<T>(&self, name: &str) -> OrientCommonResult<T>
+    pub fn get_checked<T>(&self, name: &str) -> OrientResult<T>
     where
         T: FromOValue,
     {
         match self.get_raw(name) {
             Some(val) => T::from_value(val),
-            None => Err(OrientCommonError::Field(format!(
+            None => Err(OrientError::Field(format!(
                 "Field {} not found.",
                 name
             ))),

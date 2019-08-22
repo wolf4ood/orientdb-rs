@@ -5,7 +5,7 @@ use crate::common::protocol::messages::request::{
 };
 use crate::common::protocol::serializer::DocumentSerializer;
 use crate::common::types::document::ODocument;
-use crate::protocol::encoder::VersionedEncoder;
+use crate::sync::protocol::encoder::VersionedEncoder;
 use crate::OrientResult;
 
 impl VersionedEncoder for Protocol37 {

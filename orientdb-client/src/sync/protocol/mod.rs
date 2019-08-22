@@ -17,9 +17,8 @@ pub mod messages {
     pub mod request {
         pub use crate::common::protocol::messages::request::*;
     }
-
 }
-use crate::protocol::v37::Protocol37;
+use crate::sync::protocol::v37::Protocol37;
 use std::io::Read;
 
 pub(crate) struct WiredProtocol {
