@@ -1,11 +1,9 @@
-
-
 mod common;
 
 use common::config;
 
-use orientdb_client::sync::network::conn::Connection;
 use orientdb_client::common::protocol::messages::request::Open;
+use orientdb_client::sync::network::conn::Connection;
 
 use std::error::Error;
 

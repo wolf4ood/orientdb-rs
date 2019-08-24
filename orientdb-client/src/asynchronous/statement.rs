@@ -1,11 +1,11 @@
 use super::session::OSession;
 use crate::common::protocol::messages::request::Query;
 use crate::common::types::value::{IntoOValue, OValue};
+use crate::common::types::OResult;
 use crate::sync::types::resultset::ResultSet;
 use crate::OrientResult;
-use std::collections::HashMap;
 use async_std::stream::Stream;
-use crate::common::types::OResult;
+use std::collections::HashMap;
 
 pub struct Statement<'a> {
     session: &'a OSession,
@@ -62,7 +62,7 @@ impl<'a> Statement<'a> {
         self.page_size = page_size;
         self
     }
-    pub async fn run(self) -> OrientResult<impl Stream<Item=OResult>> {
+    pub async fn run(self) -> OrientResult<impl Stream<Item = OResult>> {
         self.session.run(self.into()).await
     }
 }

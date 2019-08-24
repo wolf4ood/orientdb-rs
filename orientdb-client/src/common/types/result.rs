@@ -43,10 +43,7 @@ impl OResult {
     {
         match self.get_raw(name) {
             Some(val) => T::from_value(val),
-            None => Err(OrientError::Field(format!(
-                "Field {} not found.",
-                name
-            ))),
+            None => Err(OrientError::Field(format!("Field {} not found.", name))),
         }
     }
 

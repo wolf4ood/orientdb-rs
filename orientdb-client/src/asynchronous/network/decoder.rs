@@ -15,7 +15,6 @@ use crate::common::protocol::messages::response::{
 };
 use crate::common::types::error::{OError, RequestError};
 
-
 pub async fn decode(version: i16, buf: &mut TcpStream) -> OrientResult<Response> {
     if version >= 37 {
         return decode_with::<Protocol37>(buf).await;
@@ -45,9 +44,7 @@ impl VersionedDecoder for Protocol37 {
             op,
         })
     }
-    async fn decode_open(buf: &mut TcpStream) -> OrientResult<Open>
-
-    {
+    async fn decode_open(buf: &mut TcpStream) -> OrientResult<Open> {
         let session_id = reader::read_i32(buf).await?;
         let token = reader::read_optional_bytes(buf).await?;
         Ok(Open::new(session_id, token))
@@ -78,21 +75,17 @@ impl VersionedDecoder for Protocol37 {
         })
     }
     async fn decode_query<R: Read>(buf: &mut R) -> OrientResult<Query>
-        where
-            R: std::marker::Send,
+    where
+        R: std::marker::Send,
     {
         unimplemented!()
     }
-    async fn decode_connect(buf: &mut TcpStream) -> OrientResult<Connect>
-
-    {
+    async fn decode_connect(buf: &mut TcpStream) -> OrientResult<Connect> {
         let session_id = reader::read_i32(buf).await?;
         let token = reader::read_optional_bytes(buf).await?;
         Ok(Connect::new(session_id, token))
     }
-    async fn decode_exist(buf: &mut TcpStream) -> OrientResult<ExistDB>
-
-    {
+    async fn decode_exist(buf: &mut TcpStream) -> OrientResult<ExistDB> {
         let exist = reader::read_bool(buf).await?;
         Ok(ExistDB::new(exist))
     }
@@ -107,24 +100,21 @@ pub trait VersionedDecoder {
     async fn decode_errors(buf: &mut TcpStream) -> OrientResult<RequestError>;
 
     async fn decode_query<R: Read>(buf: &mut R) -> OrientResult<Query>
-        where
-            R: std::marker::Send;
+    where
+        R: std::marker::Send;
     async fn decode_connect(buf: &mut TcpStream) -> OrientResult<Connect>;
 
     async fn decode_exist(buf: &mut TcpStream) -> OrientResult<ExistDB>;
 
-    async fn decode_drop_db(_buf: &mut TcpStream) -> OrientResult<DropDB>
-
-    {
+    async fn decode_drop_db(_buf: &mut TcpStream) -> OrientResult<DropDB> {
         Ok(DropDB {})
     }
-    async fn decode_create_db(_buf: &mut TcpStream) -> OrientResult<CreateDB>
-    {
+    async fn decode_create_db(_buf: &mut TcpStream) -> OrientResult<CreateDB> {
         Ok(CreateDB {})
     }
     async fn decode_query_close<R: Read>(_buf: &mut R) -> OrientResult<QueryClose>
-        where
-            R: std::marker::Send,
+    where
+        R: std::marker::Send,
     {
         Ok(QueryClose {})
     }

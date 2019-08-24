@@ -22,10 +22,9 @@ struct Connection<C> {
     conn: C,
 }
 
-
 pub struct PooledConnection<M>
-    where
-        M: ConnectionManger,
+where
+    M: ConnectionManger,
 {
     conn: Option<Connection<M::Connection>>,
     pool: Pool<M>,
@@ -137,8 +136,7 @@ impl<M: ConnectionManger> Pool<M> {
                                 io::Error::new(io::ErrorKind::TimedOut, "Future was canceled")
                             })?)
                         }))
-                            .await?;
-
+                        .await?;
 
                         return Ok(PooledConnection {
                             conn: Some(result),
@@ -152,7 +150,6 @@ impl<M: ConnectionManger> Pool<M> {
 
     async fn push_back(&self, conn: Connection<M::Connection>) -> C3p0Result<()> {
         let mut internals = self.0.internals.lock().await;
-
 
         match internals.waiting.pop_front() {
             Some(t) => {

@@ -1,19 +1,19 @@
 use super::network::cluster::{Cluster, Server};
 
+use super::c3p0::{ConnectionManger, Pool, PooledConnection};
 use super::client::OrientDBClientInternal;
 use super::statement::Statement;
 use crate::common::protocol::messages::request::{Close, Query};
 use crate::common::protocol::messages::response;
 use crate::{OrientError, OrientResult};
-use super::c3p0::{ConnectionManger, Pool, PooledConnection};
-use std::sync::Arc;
 use async_trait::async_trait;
+use std::sync::Arc;
 
 use super::types::resultset::PagedResultSet;
 
-use async_std::stream::Stream;
+use crate::asynchronous::c3p0::{C3p0Error, C3p0Result};
 use crate::common::types::OResult;
-use crate::asynchronous::c3p0::{C3p0Result, C3p0Error};
+use async_std::stream::Stream;
 
 pub struct OSession {
     pub client_id: i32,
@@ -65,7 +65,7 @@ impl OSession {
             .language(language.into())
     }
 
-    pub(crate) async fn run(&self, query: Query) -> OrientResult<impl Stream<Item=OResult>> {
+    pub(crate) async fn run(&self, query: Query) -> OrientResult<impl Stream<Item = OResult>> {
         let mut conn = self.server.connection().await?;
         let page_size = query.page_size;
         let q: response::Query = conn.send(query.into()).await?.payload();
@@ -90,7 +90,8 @@ impl OSession {
         let mut conn = self.server.connection().await?;
         self.session_id = -1;
         self.token = None;
-        conn.send_and_forget(Close::new(self.session_id, self.token).into()).await?;
+        conn.send_and_forget(Close::new(self.session_id, self.token).into())
+            .await?;
         Ok(())
     }
 }
@@ -121,7 +122,10 @@ impl SessionPoolManager {
     }
 
     pub(crate) async fn managed(self, size: Option<u32>) -> OrientResult<SessionPool> {
-        let pool = Pool::builder().max_size(size.unwrap_or(20)).build(self).await?;
+        let pool = Pool::builder()
+            .max_size(size.unwrap_or(20))
+            .build(self)
+            .await?;
 
         Ok(SessionPool(pool))
     }
@@ -132,13 +136,16 @@ impl ConnectionManger for SessionPoolManager {
     type Connection = OSession;
 
     async fn connect(&self) -> C3p0Result<OSession> {
-        self.client._server_session(
-            self.server.clone(),
-            &self.db,
-            &self.user,
-            &self.password,
-            true,
-        ).await.map_err(|e| C3p0Error::User(Box::new(e)))
+        self.client
+            ._server_session(
+                self.server.clone(),
+                &self.db,
+                &self.user,
+                &self.password,
+                true,
+            )
+            .await
+            .map_err(|e| C3p0Error::User(Box::new(e)))
     }
 }
 
@@ -151,7 +158,6 @@ impl SessionPool {
     pub async fn get(&self) -> OrientResult<SessionPooled> {
         self.0.get().await.map_err(OrientError::from)
     }
-
 
     pub async fn size(&self) -> u32 {
         self.0.state().await.unwrap().connections

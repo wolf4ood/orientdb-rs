@@ -1,9 +1,9 @@
+use crate::asynchronous::c3p0::C3p0Error;
 use r2d2;
 use std::error;
 use std::fmt;
 use std::io;
 use std::string::FromUtf8Error;
-use crate::asynchronous::c3p0::C3p0Error;
 
 #[derive(Debug)]
 pub enum OrientError {
@@ -17,7 +17,6 @@ pub enum OrientError {
     Conversion(String),
     C3P0(C3p0Error),
 }
-
 
 impl From<io::Error> for OrientError {
     fn from(err: io::Error) -> OrientError {
@@ -36,7 +35,6 @@ impl From<C3p0Error> for OrientError {
         OrientError::C3P0(err)
     }
 }
-
 
 impl From<r2d2::Error> for OrientError {
     fn from(err: r2d2::Error) -> OrientError {

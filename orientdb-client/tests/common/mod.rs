@@ -55,9 +55,6 @@ pub fn connect() -> OrientDB {
     result.unwrap()
 }
 
-
-
-
 #[allow(dead_code)]
 pub fn session(db: &str) -> OSession {
     let driver = connect();
