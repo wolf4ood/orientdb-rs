@@ -45,11 +45,12 @@ impl VersionedDecoder for Protocol37 {
             op,
         })
     }
-    async fn decode_open<R: Read>(buf: &mut R) -> OrientResult<Open>
-    where
-        R: std::marker::Send,
+    async fn decode_open(buf: &mut TcpStream) -> OrientResult<Open>
+
     {
-        unimplemented!()
+        let session_id = reader::read_i32(buf).await?;
+        let token = reader::read_optional_bytes(buf).await?;
+        Ok(Open::new(session_id, token))
     }
 
     async fn decode_errors(buf: &mut TcpStream) -> OrientResult<RequestError> {
@@ -77,22 +78,23 @@ impl VersionedDecoder for Protocol37 {
         })
     }
     async fn decode_query<R: Read>(buf: &mut R) -> OrientResult<Query>
-    where
-        R: std::marker::Send,
+        where
+            R: std::marker::Send,
     {
         unimplemented!()
     }
-    async fn decode_connect<R: Read>(buf: &mut R) -> OrientResult<Connect>
-    where
-        R: std::marker::Send,
+    async fn decode_connect(buf: &mut TcpStream) -> OrientResult<Connect>
+
     {
-        unimplemented!()
+        let session_id = reader::read_i32(buf).await?;
+        let token = reader::read_optional_bytes(buf).await?;
+        Ok(Connect::new(session_id, token))
     }
-    async fn decode_exist<R: Read>(buf: &mut R) -> OrientResult<ExistDB>
-    where
-        R: std::marker::Send,
+    async fn decode_exist(buf: &mut TcpStream) -> OrientResult<ExistDB>
+
     {
-        unimplemented!()
+        let exist = reader::read_bool(buf).await?;
+        Ok(ExistDB::new(exist))
     }
 }
 
@@ -100,35 +102,29 @@ impl VersionedDecoder for Protocol37 {
 pub trait VersionedDecoder {
     async fn decode_header(buf: &mut TcpStream) -> OrientResult<Header>;
 
-    async fn decode_open<R: Read>(buf: &mut R) -> OrientResult<Open>
-    where
-        R: std::marker::Send;
+    async fn decode_open(buf: &mut TcpStream) -> OrientResult<Open>;
+
     async fn decode_errors(buf: &mut TcpStream) -> OrientResult<RequestError>;
 
     async fn decode_query<R: Read>(buf: &mut R) -> OrientResult<Query>
-    where
-        R: std::marker::Send;
-    async fn decode_connect<R: Read>(buf: &mut R) -> OrientResult<Connect>
-    where
-        R: std::marker::Send;
-    async fn decode_exist<R: Read>(buf: &mut R) -> OrientResult<ExistDB>
-    where
-        R: std::marker::Send;
-    async fn decode_drop_db<R: Read>(_buf: &mut R) -> OrientResult<DropDB>
-    where
-        R: std::marker::Send,
+        where
+            R: std::marker::Send;
+    async fn decode_connect(buf: &mut TcpStream) -> OrientResult<Connect>;
+
+    async fn decode_exist(buf: &mut TcpStream) -> OrientResult<ExistDB>;
+
+    async fn decode_drop_db(_buf: &mut TcpStream) -> OrientResult<DropDB>
+
     {
         Ok(DropDB {})
     }
-    async fn decode_create_db<R: Read>(_buf: &mut R) -> OrientResult<CreateDB>
-    where
-        R: std::marker::Send,
+    async fn decode_create_db(_buf: &mut TcpStream) -> OrientResult<CreateDB>
     {
         Ok(CreateDB {})
     }
     async fn decode_query_close<R: Read>(_buf: &mut R) -> OrientResult<QueryClose>
-    where
-        R: std::marker::Send,
+        where
+            R: std::marker::Send,
     {
         Ok(QueryClose {})
     }

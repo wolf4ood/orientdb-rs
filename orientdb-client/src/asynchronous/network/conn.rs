@@ -41,7 +41,7 @@ impl Connection {
         Ok(self)
     }
 
-    async fn send_and_forget(&mut self, request: Request) -> OrientResult<()> {
+    pub(crate) async fn send_and_forget(&mut self, request: Request) -> OrientResult<()> {
         let buf = self.protocol.encode(request)?;
         self.stream.write_all(buf.as_slice()).await?;
         Ok(())
