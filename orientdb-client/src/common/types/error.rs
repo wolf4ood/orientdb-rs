@@ -3,6 +3,7 @@ use std::error;
 use std::fmt;
 use std::io;
 use std::string::FromUtf8Error;
+use crate::asynchronous::c3p0::C3p0Error;
 
 #[derive(Debug)]
 pub enum OrientError {
@@ -14,6 +15,7 @@ pub enum OrientError {
     Pool(r2d2::Error),
     Field(String),
     Conversion(String),
+    C3P0(C3p0Error),
 }
 
 
@@ -28,6 +30,13 @@ impl From<FromUtf8Error> for OrientError {
         OrientError::UTF8(err)
     }
 }
+
+impl From<C3p0Error> for OrientError {
+    fn from(err: C3p0Error) -> OrientError {
+        OrientError::C3P0(err)
+    }
+}
+
 
 impl From<r2d2::Error> for OrientError {
     fn from(err: r2d2::Error) -> OrientError {
@@ -46,6 +55,7 @@ impl fmt::Display for OrientError {
             OrientError::Field(ref err) => write!(f, "Field error: {}", err),
             OrientError::Conversion(ref err) => write!(f, "Conversion error: {}", err),
             OrientError::Decoder(ref err) => write!(f, "Conversion error: {}", err),
+            OrientError::C3P0(ref err) => write!(f, "Async Pool error: {:?}", err),
         }
     }
 }
@@ -61,6 +71,7 @@ impl error::Error for OrientError {
             OrientError::Field(ref err) => err,
             OrientError::Conversion(ref err) => err,
             OrientError::Decoder(ref err) => err,
+            OrientError::C3P0(ref err) => "Pool error",
         }
     }
 
@@ -74,6 +85,7 @@ impl error::Error for OrientError {
             OrientError::Field(ref _err) => None,
             OrientError::Conversion(ref _err) => None,
             OrientError::Decoder(ref _err) => None,
+            OrientError::C3P0(ref err) => None,
         }
     }
 }
