@@ -6,3 +6,4 @@ pub mod statement;
 pub mod types;
 
 pub use client::OrientDB;
+pub use session::OSession;

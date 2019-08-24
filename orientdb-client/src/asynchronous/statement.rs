@@ -4,7 +4,7 @@ use crate::common::types::value::{IntoOValue, OValue};
 use crate::common::types::OResult;
 use crate::sync::types::resultset::ResultSet;
 use crate::OrientResult;
-use async_std::stream::Stream;
+use futures::Stream;
 use std::collections::HashMap;
 
 pub struct Statement<'a> {

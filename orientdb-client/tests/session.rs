@@ -3,6 +3,7 @@ use orientdb_client::sync::types::resultset::ResultSet;
 use orientdb_client::types::value::{EmbeddedMap, OValue};
 use orientdb_client::types::ODocument;
 use orientdb_client::OSession;
+
 mod common;
 
 use common::{run_with_session, session};
@@ -227,4 +228,125 @@ fn crate_schema(session: &OSession) {
         .command("create property Person.address EMBEDDED Address")
         .run()
         .unwrap();
+}
+
+#[cfg(feature = "async")]
+mod asynchronous {
+    use super::common::asynchronous::session;
+
+    use async_std::task::block_on;
+    use futures::StreamExt;
+
+    #[test]
+    fn test_open_session_close() {
+        block_on(async {
+            let session = session("test_async_open_session_close").await;
+            assert!(session.session_id > 0);
+            match session.token {
+                Some(ref t) => assert!(t.len() > 0),
+                None => assert!(false),
+            }
+            let result = session.close().await;
+            assert!(result.is_ok());
+        })
+    }
+
+    #[test]
+    fn session_query_test_simple() {
+        block_on(async {
+            let session = session("async_session_query_test_simple").await;
+
+            let mut results = vec![];
+            let mut s = session.query("select from OUser").run().await.unwrap();
+
+            while let Some(v) = s.next().await {
+                results.push(v);
+            }
+        })
+    }
+
+    #[test]
+    fn session_query_with_positional_params() {
+        block_on(async {
+            let session = session("async_session_query_with_positional_params").await;
+            let result: Vec<_> = session
+                .query("select from OUser where name = ?")
+                .positional(&[&"admin"])
+                .run()
+                .await
+                .unwrap()
+                .collect()
+                .await;
+
+            assert_eq!(1, result.len());
+        })
+    }
+
+    #[test]
+    fn session_query_with_more_positional_params() {
+        block_on(async {
+            let session = session("async_session_query_with_more_positional_params").await;
+            let result: Vec<_> = session
+                .query("select from OUser where name = ? and void = ?")
+                .positional(&[&"admin", &1])
+                .run()
+                .await
+                .unwrap()
+                .collect()
+                .await;
+
+            assert_eq!(0, result.len());
+        })
+    }
+
+    #[test]
+    fn session_query_with_named_params() {
+        block_on(async {
+            let session = session("async_session_query_with_named_params").await;
+            let result: Vec<_> = session
+                .query("select from OUser where name = :name")
+                .named(&[("name", &"admin")])
+                .run()
+                .await
+                .unwrap()
+                .collect()
+                .await;
+
+            assert_eq!(1, result.len());
+        })
+    }
+
+    #[test]
+    fn session_query_with_more_named_params() {
+        block_on(async {
+            let session = session("async_session_query_with_more_named_params").await;
+            let result: Vec<_> = session
+                .query("select from OUser where name = :name and void =:void")
+                .named(&[("name", &"admin"), ("void", &1)])
+                .run()
+                .await
+                .unwrap()
+                .collect()
+                .await;
+
+            assert_eq!(0, result.len());
+        })
+    }
+
+    #[test]
+    fn session_query_test_with_page_size() {
+        block_on(async {
+            let session = session("async_session_query_test_with_page_size").await;
+            let result: Vec<_> = session
+                .query("select from OUser")
+                .page_size(1)
+                .run()
+                .await
+                .unwrap()
+                .collect()
+                .await;
+
+            assert_eq!(3, result.len());
+        })
+    }
 }

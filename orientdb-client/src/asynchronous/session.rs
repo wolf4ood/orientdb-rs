@@ -13,7 +13,7 @@ use super::types::resultset::PagedResultSet;
 
 use crate::asynchronous::c3p0::{C3p0Error, C3p0Result};
 use crate::common::types::OResult;
-use async_std::stream::Stream;
+use futures::Stream;
 
 pub struct OSession {
     pub client_id: i32,
