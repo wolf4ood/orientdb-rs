@@ -1,13 +1,12 @@
+use crate::asynchronous::network::cluster::Server;
 use crate::common::protocol::messages::request::{QueryClose, QueryNext};
 use crate::common::protocol::messages::response::Query;
 use crate::common::types::result::OResult;
-use crate::asynchronous::network::cluster::Server;
 use crate::OrientResult;
-use std::sync::Arc;
 use async_std::prelude::Stream;
 use std::pin::Pin;
+use std::sync::Arc;
 use std::task::{Context, Poll};
-
 
 pub struct PagedResultSet {
     server: Arc<Server>,

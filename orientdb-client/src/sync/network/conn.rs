@@ -45,6 +45,4 @@ impl Connection {
         self.send_and_forget(request)?;
         self.protocol.decode(&mut self.stream)
     }
-
-    
 }

@@ -1,18 +1,18 @@
 use super::network::cluster::SyncConnection;
 use super::network::cluster::{Cluster, Server};
+use super::session::{OSession, SessionPool, SessionPoolManager};
 use crate::common::protocol::messages::request::{
     Close, Connect, CreateDB, DropDB, ExistDB, MsgHeader, Open,
 };
 use crate::common::protocol::messages::response;
-use super::session::{OSession, SessionPool, SessionPoolManager};
 use crate::{DatabaseType, OrientResult};
+use async_std::task;
+use std::future::Future;
 use std::net::SocketAddr;
 use std::net::ToSocketAddrs;
 use std::ops::Deref;
-use std::sync::Arc;
 use std::process::Output;
-use std::future::Future;
-use async_std::task;
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct OrientDB {
@@ -56,16 +56,21 @@ struct AdminSession {
 
 impl OrientDBClientInternal {
     //    pub async fn sessions(
-//        &self,
-//        db_name: &str,
-//        user: &str,
-//        password: &str,
-//        size: Option<u32>,
-//    ) -> OrientResult<SessionPool> {
-//        let server = self.cluster.select();
-//        SessionPoolManager::new(self.clone(), server, db_name, user, password).managed(size)
-//    }
-    pub async fn session(&self, db_name: &str, user: &str, password: &str) -> OrientResult<OSession> {
+    //        &self,
+    //        db_name: &str,
+    //        user: &str,
+    //        password: &str,
+    //        size: Option<u32>,
+    //    ) -> OrientResult<SessionPool> {
+    //        let server = self.cluster.select();
+    //        SessionPoolManager::new(self.clone(), server, db_name, user, password).managed(size)
+    //    }
+    pub async fn session(
+        &self,
+        db_name: &str,
+        user: &str,
+        password: &str,
+    ) -> OrientResult<OSession> {
         self._session(db_name, user, password, false).await
     }
     pub(crate) async fn _session(
@@ -76,7 +81,8 @@ impl OrientDBClientInternal {
         pooled: bool,
     ) -> OrientResult<OSession> {
         let server = self.cluster.select();
-        self._server_session(server, db_name, user, password, pooled).await
+        self._server_session(server, db_name, user, password, pooled)
+            .await
     }
     pub(crate) async fn _server_session(
         &self,
@@ -89,7 +95,8 @@ impl OrientDBClientInternal {
         let mut conn = server.connection().await?;
 
         let response: response::Open = conn
-            .send(Open::new(db_name, user, password).into()).await?
+            .send(Open::new(db_name, user, password).into())
+            .await?
             .payload();
 
         Ok(OSession::new(
@@ -102,27 +109,28 @@ impl OrientDBClientInternal {
         ))
     }
 
-
     async fn run_as_admin<R, W, T>(&self, user: &str, password: &str, work: W) -> OrientResult<R>
-        where
-            W: FnOnce(AdminSession, SyncConnection) -> T,
-            T: Future<Output=OrientResult<(SyncConnection, R)>>
+    where
+        W: FnOnce(AdminSession, SyncConnection) -> T,
+        T: Future<Output = OrientResult<(SyncConnection, R)>>,
     {
         let pooled = self.cluster.connection().await?;
         let mut conn = pooled.0;
-        let response: response::Connect = conn.send(Connect::new(user, password).into()).await?.payload();
+        let response: response::Connect = conn
+            .send(Connect::new(user, password).into())
+            .await?
+            .payload();
         let admin = AdminSession {
             session_id: response.session_id,
             token: response.token.clone(),
         };
         let (mut conn, result) = work(admin, conn).await?;
 
-
-        conn.send_and_forget(Close::new(response.session_id, response.token).into()).await?;
+        conn.send_and_forget(Close::new(response.session_id, response.token).into())
+            .await?;
 
         Ok(result)
     }
-
 
     pub async fn create_database(
         &self,
@@ -140,12 +148,14 @@ impl OrientDBClientInternal {
                             db_name,
                             db_mode,
                         )
-                            .into(),
-                    ).await?
+                        .into(),
+                    )
+                    .await?
                     .payload();
                 Ok((conn, ()))
             }
-        }).await
+        })
+        .await
     }
 
     pub async fn exist_database(
@@ -164,12 +174,14 @@ impl OrientDBClientInternal {
                             db_name,
                             db_type,
                         )
-                            .into(),
-                    ).await?
+                        .into(),
+                    )
+                    .await?
                     .payload();
                 Ok((conn, exist.exist))
             }
-        }).await
+        })
+        .await
     }
 
     pub async fn drop_database(
@@ -188,11 +200,13 @@ impl OrientDBClientInternal {
                             db_name,
                             db_type,
                         )
-                            .into(),
-                    ).await?
+                        .into(),
+                    )
+                    .await?
                     .payload();
                 Ok((conn, ()))
             }
-        }).await
+        })
+        .await
     }
 }

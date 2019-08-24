@@ -10,7 +10,7 @@ use crate::common::types::document::ODocument;
 use crate::common::types::projection::Projection;
 use crate::common::types::value::OValue;
 
-use crate::{OrientResult,OrientError};
+use crate::{OrientError, OrientResult};
 
 use chrono::TimeZone;
 use chrono::Utc;
@@ -28,9 +28,8 @@ impl DocumentDeserializer for Protocol37 {
         Ok(doc)
     }
     fn decode_projection(input: &[u8]) -> OrientResult<Projection> {
-        let (rm, projection) = parse_projection(input).map_err(|e| {
-            OrientError::Decoder(format!("Error decoding projection: {:?}", e))
-        })?;
+        let (rm, projection) = parse_projection(input)
+            .map_err(|e| OrientError::Decoder(format!("Error decoding projection: {:?}", e)))?;
         assert_eq!(rm.len(), 0);
         Ok(projection)
     }
