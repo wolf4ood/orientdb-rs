@@ -2,7 +2,7 @@ mod decoder;
 mod encoder;
 pub(crate) mod io;
 
-mod v37;
+pub(crate) mod v37;
 use self::decoder::VersionedDecoder;
 use self::encoder::VersionedEncoder;
 use crate::common::protocol::buffer::OBuffer;

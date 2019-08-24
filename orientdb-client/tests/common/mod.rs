@@ -94,6 +94,7 @@ pub fn create_database(db: &str, odb: &OrientDB, config: &OrientDBTest) {
     )
     .expect(&format!("Cannot create database with name {}", db));
 }
+
 #[allow(dead_code)]
 pub fn run_with_session<T>(db: &str, test: T)
 where
@@ -132,6 +133,7 @@ impl<'a, T: Fn(&OSession)> Drop for ODBTest<'a, T> {
         );
     }
 }
+
 impl<'a, T: Fn(&OSession)> ODBTest<'a, T> {
     #[allow(dead_code)]
     fn run(&self) {
@@ -140,5 +142,64 @@ impl<'a, T: Fn(&OSession)> ODBTest<'a, T> {
             .session(self.db, &self.config.username, &self.config.password)
             .expect("Cannot get a session");
         (self.test)(&session);
+    }
+}
+
+#[cfg(feature = "async")]
+pub mod asynchronous {
+    use super::{config, OrientDBTest};
+    use orientdb_client::asynchronous::{OSession, OrientDB};
+    use orientdb_client::DatabaseType;
+
+    pub async fn connect() -> OrientDB {
+        let config = config();
+        let result = OrientDB::connect(config.host, config.port).await;
+        assert!(result.is_ok());
+        result.unwrap()
+    }
+
+    #[allow(dead_code)]
+    pub async fn session(db: &str) -> OSession {
+        let driver = connect().await;
+        let config = config();
+
+        create_database(db, &driver, &config).await;
+
+        let result = driver
+            .session(&db, &config.username, &config.password)
+            .await;
+        assert!(result.is_ok(), result.err());
+        result.unwrap()
+    }
+
+    pub async fn create_database(db: &str, odb: &OrientDB, config: &OrientDBTest) {
+        let exist = odb
+            .exist_database(
+                db,
+                &config.r_username,
+                &config.r_password,
+                DatabaseType::Memory,
+            )
+            .await
+            .expect(&format!("Cannot check if database with name {} exists", db));
+
+        if exist {
+            odb.drop_database(
+                db,
+                &config.r_username,
+                &config.r_password,
+                DatabaseType::Memory,
+            )
+            .await
+            .expect(&format!("Cannot drop database with name {}", db));
+        }
+        odb.create_database(
+            db,
+            &config.r_password,
+            &config.r_password,
+            DatabaseType::Memory,
+        )
+        .await
+        .expect(&format!("Cannot create database with name {}", db));
     }
 }

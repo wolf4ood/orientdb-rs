@@ -1,5 +1,9 @@
+use crate::common::protocol::deserializer::DocumentDeserializer;
 use crate::common::protocol::messages::response::Response;
 use crate::common::protocol::messages::response::Status;
+
+use crate::sync::protocol::v37::Protocol37 as P37Sync;
+
 use crate::{OrientError, OrientResult};
 use async_std::io::Read;
 use async_std::net::TcpStream;
@@ -14,6 +18,8 @@ use crate::common::protocol::messages::response::{
     Connect, CreateDB, DropDB, ExistDB, Header, Open, Query, QueryClose,
 };
 use crate::common::types::error::{OError, RequestError};
+use crate::common::types::OResult;
+use std::collections::{HashMap, VecDeque};
 
 pub async fn decode(version: i16, buf: &mut TcpStream) -> OrientResult<Response> {
     if version >= 37 {
@@ -74,11 +80,31 @@ impl VersionedDecoder for Protocol37 {
             serialized: _serialized_exception,
         })
     }
-    async fn decode_query<R: Read>(buf: &mut R) -> OrientResult<Query>
-    where
-        R: std::marker::Send,
-    {
-        unimplemented!()
+    async fn decode_query(buf: &mut TcpStream) -> OrientResult<Query> {
+        let query_id = reader::read_string(buf).await?;
+        let changes = reader::read_bool(buf).await?;
+        let has_plan = reader::read_bool(buf).await?;
+
+        let execution_plan = if has_plan {
+            Some(read_result(buf).await?)
+        } else {
+            None
+        };
+
+        let _prefetched = reader::read_i32(buf).await?;
+        let records = read_result_set(buf).await?;
+        let has_next = reader::read_bool(buf).await?;
+        let stats = read_query_stats(buf).await?;
+        let _reaload_metadata = reader::read_bool(buf).await?;
+
+        Ok(Query::new(
+            query_id,
+            changes,
+            execution_plan,
+            records,
+            has_next,
+            stats,
+        ))
     }
     async fn decode_connect(buf: &mut TcpStream) -> OrientResult<Connect> {
         let session_id = reader::read_i32(buf).await?;
@@ -99,9 +125,8 @@ pub trait VersionedDecoder {
 
     async fn decode_errors(buf: &mut TcpStream) -> OrientResult<RequestError>;
 
-    async fn decode_query<R: Read>(buf: &mut R) -> OrientResult<Query>
-    where
-        R: std::marker::Send;
+    async fn decode_query(buf: &mut TcpStream) -> OrientResult<Query>;
+
     async fn decode_connect(buf: &mut TcpStream) -> OrientResult<Connect>;
 
     async fn decode_exist(buf: &mut TcpStream) -> OrientResult<ExistDB>;
@@ -138,4 +163,48 @@ pub async fn decode_with<T: VersionedDecoder>(buf: &mut TcpStream) -> OrientResu
         },
     };
     Ok(Response::new(header, payload))
+}
+
+async fn read_result(buf: &mut TcpStream) -> OrientResult<OResult> {
+    let r_type = reader::read_i8(buf).await?;
+    match r_type {
+        4 => {
+            let buffer = reader::read_bytes(buf).await?;
+            let projection = P37Sync::decode_projection(&buffer)?;
+            Ok(OResult::from(projection))
+        }
+        1 | 2 | 3 => {
+            let _val = reader::read_i16(buf).await?;
+            let _d_type = reader::read_i8(buf).await?;
+            let identity = reader::read_identity(buf).await?;
+            let version = reader::read_i32(buf).await?;
+
+            let buffer = reader::read_bytes(buf).await?;
+            let mut document = P37Sync::decode_document(&buffer)?;
+
+            document.set_record_id(identity);
+            document.set_version(version);
+
+            Ok(OResult::from((r_type, document)))
+        }
+        _ => panic!("Unsupported result type {}", r_type),
+    }
+}
+
+async fn read_result_set(buf: &mut TcpStream) -> OrientResult<VecDeque<OResult>> {
+    let size = reader::read_i32(buf).await?;
+    let mut records = VecDeque::new();
+    for _ in 0..size {
+        let result = read_result(buf).await?;
+        records.push_back(result);
+    }
+
+    Ok(records)
+}
+
+async fn read_query_stats(buf: &mut TcpStream) -> OrientResult<HashMap<String, i64>> {
+    let size = reader::read_i32(buf).await?;
+    let stats = HashMap::new();
+    for _ in 0..size {}
+    Ok(stats)
 }

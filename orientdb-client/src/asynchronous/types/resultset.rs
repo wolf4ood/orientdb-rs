@@ -38,6 +38,9 @@ impl futures::Stream for PagedResultSet {
     type Item = OResult;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        unimplemented!()
+        match self.response.records.pop_front() {
+            Some(r) => Poll::Ready(Some(r)),
+            None => Poll::Ready(None),
+        }
     }
 }
