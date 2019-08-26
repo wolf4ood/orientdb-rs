@@ -3,10 +3,10 @@ use crate::common::protocol::messages::request::{QueryClose, QueryNext};
 use crate::common::protocol::messages::response::Query;
 use crate::common::types::result::OResult;
 use crate::OrientResult;
+use async_std::task;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
-use async_std::task;
 use std::task::{Context, Poll};
 
 pub struct PagedResultSet {
@@ -101,8 +101,6 @@ impl futures::Stream for PagedResultSet {
 impl Drop for PagedResultSet {
     #[allow(unused_must_use)]
     fn drop(&mut self) {
-
         task::block_on(self.close_result());
-
     }
 }
