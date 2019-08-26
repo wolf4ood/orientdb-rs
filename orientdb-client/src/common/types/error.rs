@@ -1,4 +1,3 @@
-
 use r2d2;
 use std::error;
 use std::fmt;
