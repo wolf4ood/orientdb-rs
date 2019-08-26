@@ -6,12 +6,10 @@ use crate::common::protocol::messages::request::{
 };
 use crate::common::protocol::messages::response;
 use crate::{DatabaseType, OrientResult};
-use async_std::task;
 use std::future::Future;
 use std::net::SocketAddr;
 use std::net::ToSocketAddrs;
 use std::ops::Deref;
-use std::process::Output;
 use std::sync::Arc;
 
 #[derive(Clone)]
@@ -36,7 +34,7 @@ impl OrientDB {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct OrientDBClientInternal {
     cluster: Arc<Cluster>,
 }

@@ -8,11 +8,8 @@ use crate::{OrientError, OrientResult};
 use async_std::io::Read;
 use async_std::net::TcpStream;
 use async_trait::async_trait;
-use byteorder::{BigEndian, ReadBytesExt};
-use std::io::Cursor;
 
 use super::reader;
-use async_std::prelude::*;
 
 use crate::common::protocol::messages::response::{
     Connect, CreateDB, DropDB, ExistDB, Header, Open, Query, QueryClose,

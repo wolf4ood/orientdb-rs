@@ -2,8 +2,6 @@ use crate::common::protocol::messages::request::HandShake;
 use crate::common::protocol::messages::{Request, Response};
 use async_std::net::TcpStream;
 use async_std::prelude::*;
-use byteorder::{BigEndian, ReadBytesExt};
-use std::io::Cursor;
 use std::net::Shutdown;
 
 use crate::OrientResult;
@@ -16,6 +14,14 @@ use crate::sync::protocol::WiredProtocol;
 pub struct Connection {
     stream: TcpStream,
     protocol: WiredProtocol,
+}
+
+impl std::fmt::Debug for Connection {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+        fmt.debug_struct("Connection")
+            .field("stream", &self.stream)
+            .finish()
+    }
 }
 
 impl Connection {
