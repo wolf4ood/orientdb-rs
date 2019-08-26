@@ -170,9 +170,9 @@ impl SessionPool {
     }
 
     pub async fn size(&self) -> u32 {
-        self.0.state().await.unwrap().connections
+        self.0.state().await.connections
     }
     pub async fn idle(&self) -> u32 {
-        self.0.state().await.unwrap().idle_connections
+        self.0.state().await.idle_connections
     }
 }

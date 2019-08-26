@@ -174,8 +174,8 @@ impl<M: ConnectionManger> Pool<M> {
         Ok(())
     }
 
-    pub async fn state(&self) -> C3p0Result<State> {
-        Ok(self.0.internals.lock().await.state.clone())
+    pub async fn state(&self) -> State {
+        self.0.internals.lock().await.state.clone()
     }
 }
 
