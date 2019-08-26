@@ -46,12 +46,12 @@ pub async fn read_i16(buf: &mut TcpStream) -> OrientResult<i16> {
 
 pub async fn read_bool(buf: &mut TcpStream) -> OrientResult<bool> {
     let e = read_i8(buf).await?;
-    let exhists = match e {
+    let val = match e {
         0 => false,
         1 => true,
         _ => panic!("Cannot convert value to bool"),
     };
-    Ok(exhists)
+    Ok(val)
 }
 
 pub async fn read_optional_bytes(buf: &mut TcpStream) -> OrientResult<Option<Vec<u8>>> {
