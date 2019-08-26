@@ -61,7 +61,7 @@ impl<'a> Statement<'a> {
         self.page_size = page_size;
         self
     }
-    pub async fn run(self) -> OrientResult<impl Stream<Item = OResult>> {
+    pub async fn run(self) -> OrientResult<impl Stream<Item = OrientResult<OResult>>> {
         self.session.run(self.into()).await
     }
 }

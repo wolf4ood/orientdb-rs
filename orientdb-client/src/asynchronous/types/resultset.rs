@@ -57,13 +57,13 @@ impl PagedResultSet {
 }
 
 impl futures::Stream for PagedResultSet {
-    type Item = OResult;
+    type Item = OrientResult<OResult>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         loop {
             match &mut self.state {
                 ResultState::Looping => match self.response.records.pop_front() {
-                    Some(r) => return Poll::Ready(Some(r)),
+                    Some(r) => return Poll::Ready(Some(Ok(r))),
                     None => {
                         if self.response.has_next {
                             let server = self.server.clone();

@@ -66,7 +66,7 @@ impl OSession {
             .language(language.into())
     }
 
-    pub(crate) async fn run(&self, query: Query) -> OrientResult<impl Stream<Item = OResult>> {
+    pub(crate) async fn run(&self, query: Query) -> OrientResult<impl Stream<Item = OrientResult<OResult>>> {
         let mut conn = self.server.connection().await?;
         let page_size = query.page_size;
         let q: response::Query = conn.send(query.into()).await?.payload();
