@@ -55,16 +55,19 @@ struct AdminSession {
 }
 
 impl OrientDBClientInternal {
-    //    pub async fn sessions(
-    //        &self,
-    //        db_name: &str,
-    //        user: &str,
-    //        password: &str,
-    //        size: Option<u32>,
-    //    ) -> OrientResult<SessionPool> {
-    //        let server = self.cluster.select();
-    //        SessionPoolManager::new(self.clone(), server, db_name, user, password).managed(size)
-    //    }
+    pub async fn sessions(
+        &self,
+        db_name: &str,
+        user: &str,
+        password: &str,
+        min_size: Option<u32>,
+        max_size: Option<u32>,
+    ) -> OrientResult<SessionPool> {
+        let server = self.cluster.select();
+        SessionPoolManager::new(self.clone(), server, db_name, user, password)
+            .managed(min_size, max_size)
+            .await
+    }
     pub async fn session(
         &self,
         db_name: &str,

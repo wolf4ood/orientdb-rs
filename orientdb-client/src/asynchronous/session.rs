@@ -121,9 +121,14 @@ impl SessionPoolManager {
         }
     }
 
-    pub(crate) async fn managed(self, size: Option<u32>) -> OrientResult<SessionPool> {
+    pub(crate) async fn managed(
+        self,
+        min_size: Option<u32>,
+        max_size: Option<u32>,
+    ) -> OrientResult<SessionPool> {
         let pool = Pool::builder()
-            .max_size(size.unwrap_or(20))
+            .max_size(max_size.unwrap_or(20))
+            .min_size(min_size.and(max_size).unwrap_or(20))
             .build(self)
             .await?;
 
