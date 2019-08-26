@@ -15,6 +15,7 @@ use crate::asynchronous::c3p0::{C3p0Error, C3p0Result};
 use crate::common::types::OResult;
 use futures::Stream;
 
+#[derive(Debug)]
 pub struct OSession {
     pub client_id: i32,
     pub session_id: i32,
@@ -96,6 +97,7 @@ impl OSession {
     }
 }
 
+#[derive(Debug)]
 pub struct SessionPoolManager {
     db: String,
     user: String,

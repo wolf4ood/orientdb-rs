@@ -5,13 +5,12 @@ use super::super::c3p0::{ConnectionManger, Pool, PooledConnection};
 use crate::asynchronous::c3p0::{C3p0Error, C3p0Result};
 use crate::{OrientError, OrientResult};
 use async_trait::async_trait;
-use futures;
-use futures::Future;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
 pub type SyncConnection = PooledConnection<ServerConnectionManager>;
 
+#[derive(Debug)]
 pub struct Cluster {
     servers: Vec<Arc<Server>>,
 }
@@ -73,6 +72,7 @@ impl Default for ClusterBuilder {
     }
 }
 
+#[derive(Debug)]
 pub struct Server {
     pool: Pool<ServerConnectionManager>,
 }
@@ -96,6 +96,7 @@ impl Server {
     }
 }
 
+#[derive(Debug)]
 pub struct ServerConnectionManager {
     address: SocketAddr,
 }

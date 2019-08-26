@@ -1,27 +1,29 @@
 use super::config::Config;
-use super::PoolBuilder;
-use async_trait::async_trait;
-use std::sync::Arc;
-
 use super::C3p0Result;
+use super::PoolBuilder;
 use async_std::sync::Mutex;
 use async_std::{io, task};
+use async_trait::async_trait;
+use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
+use std::sync::Arc;
 
 use futures::channel::oneshot;
 use std::collections::VecDeque;
 
 #[async_trait]
-pub trait ConnectionManger: Send + Sync + 'static {
-    type Connection: Send + 'static;
+pub trait ConnectionManger: Send + Sync + Debug + 'static {
+    type Connection: Send + Debug + 'static;
 
     async fn connect(&self) -> C3p0Result<Self::Connection>;
 }
 
+#[derive(Debug)]
 struct Connection<C> {
     conn: C,
 }
 
+#[derive(Debug)]
 pub struct PooledConnection<M>
 where
     M: ConnectionManger,
@@ -68,8 +70,16 @@ impl<M: ConnectionManger> Clone for Pool<M> {
     }
 }
 
-//#[derive(Clone)]
 pub struct Pool<M: ConnectionManger>(Arc<SharedPool<M>>);
+
+impl<M> std::fmt::Debug for Pool<M>
+where
+    M: ConnectionManger,
+{
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+        fmt.debug_struct("Pool").finish()
+    }
+}
 
 impl<M: ConnectionManger> Pool<M> {
     pub fn builder() -> PoolBuilder<M> {
@@ -153,7 +163,7 @@ impl<M: ConnectionManger> Pool<M> {
 
         match internals.waiting.pop_front() {
             Some(t) => {
-                t.send(conn);
+                t.send(conn).unwrap();
             }
             None => {
                 internals.conns.push(conn);
@@ -192,7 +202,7 @@ async fn add_connection<M: ConnectionManger>(pool: Pool<M>) -> C3p0Result<bool> 
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct State {
     pub connections: u32,
     pub idle_connections: u32,

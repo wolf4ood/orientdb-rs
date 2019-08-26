@@ -2,7 +2,6 @@ use super::session::OSession;
 use crate::common::protocol::messages::request::Query;
 use crate::common::types::value::{IntoOValue, OValue};
 use crate::common::types::OResult;
-use crate::sync::types::resultset::ResultSet;
 use crate::OrientResult;
 use futures::Stream;
 use std::collections::HashMap;

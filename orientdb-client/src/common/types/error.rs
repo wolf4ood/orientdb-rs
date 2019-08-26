@@ -75,7 +75,7 @@ impl error::Error for OrientError {
             OrientError::Conversion(ref err) => err,
             OrientError::Decoder(ref err) => err,
             #[cfg(feature = "async")]
-            OrientError::C3P0(ref err) => "Pool error",
+            OrientError::C3P0(ref err) => err.description(),
         }
     }
 
@@ -90,7 +90,7 @@ impl error::Error for OrientError {
             OrientError::Conversion(ref _err) => None,
             OrientError::Decoder(ref _err) => None,
             #[cfg(feature = "async")]
-            OrientError::C3P0(ref err) => None,
+            OrientError::C3P0(ref err) => Some(err),
         }
     }
 }

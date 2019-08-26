@@ -1,14 +1,8 @@
-use crate::asynchronous::c3p0::PooledConnection;
-use crate::asynchronous::network::cluster::{Server, ServerConnectionManager};
-use crate::asynchronous::network::Connection;
+use crate::asynchronous::network::cluster::Server;
 use crate::common::protocol::messages::request::{QueryClose, QueryNext};
 use crate::common::protocol::messages::response::Query;
-use crate::common::protocol::messages::Response;
 use crate::common::types::result::OResult;
 use crate::OrientResult;
-use async_std::prelude::Stream;
-use futures::future::ready;
-use futures::{FutureExt, TryFutureExt};
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -23,45 +17,9 @@ pub struct PagedResultSet {
     state: ResultState,
 }
 
-pub struct ConnFuture {
-    server: Arc<Server>,
-    future: Option<Box<Future<Output = OrientResult<PooledConnection<ServerConnectionManager>>>>>,
-}
-
-unsafe impl Send for ConnFuture {}
-
-impl ConnFuture {
-    fn new(server: Arc<Server>) -> ConnFuture {
-        ConnFuture {
-            server,
-            future: None,
-        }
-    }
-}
-
-impl Future for ConnFuture {
-    type Output = PooledConnection<ServerConnectionManager>;
-
-    fn poll(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
-        match &self.future {
-            Some(f) => Poll::Pending,
-            None => {
-                let server = self.server.clone();
-                let unchecked = async move { server.connection().await };
-
-                self.future = Some(Box::new(unchecked));
-                //                self.future = Some(Box::new(self.server.connection()));
-                Poll::Pending
-            }
-        }
-    }
-}
-
 pub enum ResultState {
     Looping,
-    NextPage(Box<Future<Output = OrientResult<Query>> + Send>),
-    //    Connecting(ConnFuture),
-    //    Sending,
+    NextPage(Box<dyn Future<Output = OrientResult<Query>> + Send>),
 }
 
 impl PagedResultSet {
