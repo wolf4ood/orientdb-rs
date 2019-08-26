@@ -29,7 +29,7 @@ before_install:
   - cargo fmt --all -- --check
 
 script:
-  - cargo test --all
+  - cargo test --all --all-features
 
 before_script:
   - docker-compose -f docker-compose/docker-compose.yaml up -d 
