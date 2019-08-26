@@ -19,6 +19,7 @@ pub mod types {
     pub use super::common::types::*;
 }
 
+#[cfg(feature = "async")]
 pub mod aio {
     pub use crate::asynchronous::session::{OSession, SessionPool};
     pub use crate::asynchronous::OrientDB;
