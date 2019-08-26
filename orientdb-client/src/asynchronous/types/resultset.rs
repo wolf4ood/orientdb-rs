@@ -6,6 +6,7 @@ use crate::OrientResult;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
+use async_std::task;
 use std::task::{Context, Poll};
 
 pub struct PagedResultSet {
@@ -38,6 +39,20 @@ impl PagedResultSet {
             page_size,
             state: ResultState::Looping,
         }
+    }
+
+    async fn close_result(&mut self) -> OrientResult<()> {
+        if self.response.has_next {
+            let mut conn = self.server.connection().await?;
+            let msg = QueryClose::new(
+                self.session_id,
+                self.token.clone(),
+                self.response.query_id.as_str(),
+            );
+            conn.send(msg.into()).await?;
+            self.response.has_next = false;
+        }
+        Ok(())
     }
 }
 
@@ -80,5 +95,14 @@ impl futures::Stream for PagedResultSet {
                 }
             };
         }
+    }
+}
+
+impl Drop for PagedResultSet {
+    #[allow(unused_must_use)]
+    fn drop(&mut self) {
+
+        task::block_on(self.close_result());
+
     }
 }
