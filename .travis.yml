@@ -21,6 +21,10 @@ addons:
       - libiberty-dev
 
 
+matrix:
+  allow_failures:
+    - rust: nightly
+      
 env:
   - ORIENTDB_VERSION=3.0.22
   - ORIENTDB_VERSION=3.0.23
