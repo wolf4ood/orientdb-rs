@@ -44,7 +44,7 @@ mod asynchronous {
         block_on(async {
             let cfg = config();
 
-            let _client = OrientDB::connect(cfg.host, cfg.port)
+            let _client = OrientDB::connect((cfg.host, cfg.port))
                 .await
                 .expect("Failed to connect");
         });
@@ -55,7 +55,7 @@ mod asynchronous {
         block_on(async {
             let cfg = config();
 
-            let client = OrientDB::connect(cfg.host, cfg.port)
+            let client = OrientDB::connect((cfg.host, cfg.port))
                 .await
                 .expect("Failed to connect");
 

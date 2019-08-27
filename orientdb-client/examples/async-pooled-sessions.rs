@@ -8,7 +8,7 @@ use async_std::task::{self, block_on, JoinHandle};
 #[allow(unused_must_use)]
 fn main() -> OrientResult<()> {
     block_on(async {
-        let client = OrientDB::connect("localhost", 2424).await?;
+        let client = OrientDB::connect(("localhost", 2424)).await?;
         let db = "pooled_session";
 
         let n_tasks = 20;

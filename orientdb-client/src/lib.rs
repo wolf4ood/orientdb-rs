@@ -16,7 +16,7 @@
 //! use orientdb_client::{OrientDB};
 //!
 //! fn main() -> Result<(), Box<std::error::Error>> {
-//!    let client = OrientDB::connect("localhost",2424)?;
+//!    let client = OrientDB::connect(("localhost",2424))?;
 //!
 //!    let session = client.session("demodb","admin","admin")?;
 //!

@@ -4,6 +4,7 @@ use crate::common::protocol::messages::request::{
     Close, Connect, CreateDB, DropDB, ExistDB, MsgHeader, Open,
 };
 use crate::common::protocol::messages::response;
+use crate::common::ConnectionOptions;
 use crate::sync::session::{OSession, SessionPool, SessionPoolManager};
 use crate::{DatabaseType, OrientResult};
 use std::net::SocketAddr;
@@ -17,8 +18,10 @@ pub struct OrientDB {
 }
 
 impl OrientDB {
-    pub fn connect<T: Into<String>>(host: T, port: u16) -> OrientResult<OrientDB> {
-        let addr: SocketAddr = format!("{}:{}", host.into(), port)
+    pub fn connect<T: Into<ConnectionOptions>>(options: T) -> OrientResult<OrientDB> {
+        let opts = options.into();
+
+        let addr: SocketAddr = format!("{}:{}", opts.host, opts.port)
             .to_socket_addrs()?
             .next()
             .expect("Cannot parse socket address");

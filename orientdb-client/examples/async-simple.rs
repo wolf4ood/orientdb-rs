@@ -5,7 +5,7 @@ use orientdb_client::OrientResult;
 
 fn main() -> OrientResult<()> {
     block_on(async {
-        let client = OrientDB::connect("localhost", 2424).await?;
+        let client = OrientDB::connect(("localhost", 2424)).await?;
 
         let session = client.session("demodb", "admin", "admin").await?;
 

@@ -29,7 +29,7 @@ impl OrientDBTest {
         };
 
         OrientDBTest {
-            address: address,
+            address,
             host,
             port,
             username: read_var("D_USERNAME"),
@@ -50,7 +50,7 @@ pub fn config() -> OrientDBTest {
 
 pub fn connect() -> OrientDB {
     let config = config();
-    let result = OrientDB::connect(config.host, config.port);
+    let result = OrientDB::connect((config.host, config.port));
     assert!(result.is_ok());
     result.unwrap()
 }
@@ -153,7 +153,7 @@ pub mod asynchronous {
 
     pub async fn connect() -> OrientDB {
         let config = config();
-        let result = OrientDB::connect(config.host, config.port).await;
+        let result = OrientDB::connect((config.host, config.port)).await;
         assert!(result.is_ok());
         result.unwrap()
     }

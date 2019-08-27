@@ -6,7 +6,7 @@ use std::thread;
 #[allow(unused_must_use)]
 fn main() {
     let client =
-        OrientDB::connect("localhost", 2424).expect("Failed to connect to OrientDB instance");
+        OrientDB::connect(("localhost", 2424)).expect("Failed to connect to OrientDB instance");
     let db = "pooled_session";
 
     let n_threads = 4;
