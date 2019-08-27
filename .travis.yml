@@ -23,6 +23,7 @@ addons:
 
 env:
   - ORIENTDB_VERSION=3.0.22
+  - ORIENTDB_VERSION=3.0.23
 
 before_install:
   - rustup component add rustfmt
