@@ -4,12 +4,11 @@ use std::io::Write;
 
 pub struct OBuffer {
     inner: Vec<u8>,
-
 }
 
 impl Default for OBuffer {
     fn default() -> Self {
-       OBuffer::new()
+        OBuffer::new()
     }
 }
 
