@@ -1,8 +1,39 @@
+//! Experimental Rust client for OrientDB.
+//! The driver supports sync and async.
+//!
+//!
+//! You can use orientdb-client this lines in your `Cargo.toml`
+//!
+//! ```toml
+//! [dependencies]
+//! orientdb-client = "*"
+//! ```
+//!
+//! Here it is an usage example:
+//!
+//! ```rust,no_run
+//!
+//! use orientdb_client::{OrientDB};
+//!
+//! fn main() -> Result<(), Box<std::error::Error>> {
+//!    let client = OrientDB::connect("localhost",2424)?;
+//!
+//!    let session = client.session("demodb","admin","admin")?;
+//!
+//!    let results : Vec<_> = session.query("select from V where id = :param").named(&[("param", &1)]).run()?.collect();
+//!
+//!
+//!    println!("{:?}", results);
+//!
+//!    Ok(())
+//!}
+//!
+//!
+//! ```
+//!
+
 pub mod common;
 pub mod sync;
-// pub mod network;
-// pub mod protocol;
-// pub mod types;
 
 #[cfg(feature = "async")]
 pub mod asynchronous;
