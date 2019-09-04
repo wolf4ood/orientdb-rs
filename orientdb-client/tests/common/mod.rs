@@ -18,24 +18,36 @@ pub struct OrientDBTest {
 
 impl OrientDBTest {
     fn config() -> OrientDBTest {
-        dotenv().expect("Failed to read .env file");
-        let address = read_var("ORIENTDB_ADDRESS");
+        match dotenv() {
+            Ok(_) => {
+                let address = read_var("ORIENTDB_ADDRESS");
 
-        let (host, port) = {
-            let parsed: Vec<&str> = address.split(":").collect();
-            let host = String::from(parsed[0]);
-            let port = parsed[1].parse().unwrap();
-            (host, port)
-        };
+                let (host, port) = {
+                    let parsed: Vec<&str> = address.split(":").collect();
+                    let host = String::from(parsed[0]);
+                    let port = parsed[1].parse().unwrap();
+                    (host, port)
+                };
 
-        OrientDBTest {
-            address,
-            host,
-            port,
-            username: read_var("D_USERNAME"),
-            password: read_var("D_PASSWORD"),
-            r_username: read_var("R_USERNAME"),
-            r_password: read_var("R_PASSWORD"),
+                OrientDBTest {
+                    address,
+                    host,
+                    port,
+                    username: read_var("D_USERNAME"),
+                    password: read_var("D_PASSWORD"),
+                    r_username: read_var("R_USERNAME"),
+                    r_password: read_var("R_PASSWORD"),
+                }
+            }
+            Err(_) => OrientDBTest {
+                address: String::from("127.0.0.1:2424"),
+                host: String::from("127.0.0.1"),
+                port: 2424,
+                username: String::from("admin"),
+                password: String::from("admin"),
+                r_username: String::from("admin"),
+                r_password: String::from("admin"),
+            },
         }
     }
 }
