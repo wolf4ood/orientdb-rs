@@ -45,8 +45,8 @@ impl OrientDBTest {
                 port: 2424,
                 username: String::from("admin"),
                 password: String::from("admin"),
-                r_username: String::from("admin"),
-                r_password: String::from("admin"),
+                r_username: String::from("root"),
+                r_password: String::from("root"),
             },
         }
     }
