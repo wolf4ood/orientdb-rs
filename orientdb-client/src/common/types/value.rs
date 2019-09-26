@@ -55,7 +55,7 @@ impl<'a> From<&'a str> for OValue {
     }
 }
 
-pub trait IntoOValue {
+pub trait IntoOValue : Send + Sync {
     fn into_ovalue(&self) -> OValue;
 }
 
@@ -117,7 +117,7 @@ where
     }
 }
 
-impl<T, S: std::hash::BuildHasher> IntoOValue for HashMap<String, T, S>
+impl<T, S: std::hash::BuildHasher + Send + Sync> IntoOValue for HashMap<String, T, S>
 where
     T: IntoOValue,
 {
