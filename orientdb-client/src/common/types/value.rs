@@ -55,7 +55,7 @@ impl<'a> From<&'a str> for OValue {
     }
 }
 
-pub trait IntoOValue : Send + Sync {
+pub trait IntoOValue: Send + Sync {
     fn into_ovalue(&self) -> OValue;
 }
 
