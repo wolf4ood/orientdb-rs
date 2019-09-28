@@ -31,7 +31,7 @@ impl Default for ConnectionOptions {
     fn default() -> ConnectionOptions {
         ConnectionOptions {
             host: String::from("localhost"),
-            port: 8182,
+            port: 2424,
             pool_size: 10,
         }
     }
