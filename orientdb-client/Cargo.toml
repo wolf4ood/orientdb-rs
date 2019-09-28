@@ -35,7 +35,7 @@ nom = "5.0.0"
 
 async-std =  { version = "0.99.7", optional = true }
 async-trait = { version = "0.1.10", optional = true }
-futures-preview =  { version="0.3.0-alpha.17", optional=true }
+futures-preview =  { version="0.3.0-alpha.19", optional=true }
 
 
 
