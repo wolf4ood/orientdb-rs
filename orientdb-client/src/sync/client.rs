@@ -26,7 +26,10 @@ impl OrientDB {
             .next()
             .expect("Cannot parse socket address");
 
-        let cluster = Cluster::builder().add_server(addr).build();
+        let cluster = Cluster::builder()
+            .add_server(addr)
+            .pool_max(opts.pool_size)
+            .build();
 
         let internal = OrientDBClientInternal {
             cluster: Arc::new(cluster),
