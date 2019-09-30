@@ -184,6 +184,21 @@ impl FromOValue for i32 {
     }
 }
 
+impl FromOValue for i64 {
+    fn from_value(ty: &OValue) -> OrientResult<Self>
+    where
+        Self: Sized,
+    {
+        match ty {
+            OValue::I64(val) => Ok(*val),
+            _ => Err(OrientError::Conversion(format!(
+                "Cannot convert {:?} to i64",
+                ty
+            ))),
+        }
+    }
+}
+
 impl FromOValue for String {
     fn from_value(ty: &OValue) -> OrientResult<Self>
     where
