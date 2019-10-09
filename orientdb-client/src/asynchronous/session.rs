@@ -7,13 +7,51 @@ use crate::common::protocol::messages::request::{Close, Query};
 use crate::common::protocol::messages::response;
 use crate::{OrientError, OrientResult};
 use async_trait::async_trait;
+use async_std::future::Future;
 use std::sync::Arc;
+use std::convert::From;
+use std::pin::Pin;
 
 use super::types::resultset::PagedResultSet;
 
 use crate::asynchronous::c3p0::{C3p0Error, C3p0Result};
 use crate::common::types::OResult;
 use futures::Stream;
+
+#[derive(Debug)]
+pub struct OSessionRetry<'session>(&'session OSession);
+
+impl<'session> OSessionRetry<'session> {
+
+    pub fn new(session: &'session OSession) -> Self {
+        OSessionRetry(session)
+    }
+
+    pub fn query<QUERY: Into<String>>(&self, query: QUERY) -> Statement {
+        Statement::new(self.0, query.into())
+    }
+
+    pub fn command<COMMAND: Into<String>>(&self, command: COMMAND) -> Statement {
+        Statement::new(self.0, command.into()).mode(0)
+    }
+
+    pub fn script_sql<SCRIPT: Into<String>>(&self, script: SCRIPT) -> Statement {
+        Statement::new(self.0, script.into()) 
+            .mode(2)
+            .language(String::from("SQL"))
+    }
+    
+    pub fn script<SCRIPT, LANGUAGE>(&self, script: SCRIPT, language: LANGUAGE) -> Statement
+    where
+        SCRIPT: Into<String>,
+        LANGUAGE: Into<String>,
+    {
+        Statement::new(self.0, script.into())
+            .mode(2)
+            .language(language.into())
+
+    }
+}
 
 #[derive(Debug)]
 pub struct OSession {
@@ -64,6 +102,24 @@ impl OSession {
         Statement::new(self, script.into())
             .mode(2)
             .language(language.into())
+    }
+
+    pub async fn retry<'session, F>(&self, mut n: u32, f: F) -> OrientResult<impl Stream<Item = OrientResult<OResult>>>
+    where
+        F: Fn(OSessionRetry) -> Pin<Box<dyn Future<Output = Statement<'session>>>>
+    {
+        if n == 0 { panic!("retry must be called with a number greater than 0") };
+        loop {
+            let retry_session = OSessionRetry::new(self);
+            let stmt: Statement = f(retry_session).await;
+            match stmt.run().await {
+                Ok(t) => return Ok(t),
+                Err(e) => {
+                    if n > 0 { n -= 1; } else { return Err(e) };
+                    continue;
+                }
+            }
+        }
     }
 
     pub(crate) async fn run(
