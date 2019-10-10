@@ -9,7 +9,6 @@ use crate::{OrientError, OrientResult};
 use async_std::future::Future;
 use async_trait::async_trait;
 use std::convert::From;
-use std::pin::Pin;
 use std::sync::Arc;
 
 use super::types::resultset::PagedResultSet;
@@ -102,27 +101,34 @@ impl OSession {
             .language(language.into())
     }
 
-    pub async fn with_retry<'session, FN, T, RETURN>(&self, mut n: u32, f: FN) -> OrientResult<T>
+    pub async fn with_retry<'session, FN, T, RETURN>(
+        &'session self,
+        mut n: u32,
+        f: FN,
+    ) -> OrientResult<T>
     where
         RETURN: Future<Output = OrientResult<T>>,
-        FN: Fn(OSessionRetry) -> RETURN,
+        FN: Fn(OSessionRetry<'session>) -> RETURN,
     {
         if n == 0 {
             panic!("retry must be called with a number greater than 0")
         };
         loop {
             let retry_session = OSessionRetry::new(self);
-            let stmt: Statement = f(retry_session).await;
-            match stmt.run().await {
+            let result: OrientResult<T> = f(retry_session).await;
+            match result {
                 Ok(t) => return Ok(t),
-                Err(e) => {
-                    if n > 0 {
-                        n -= 1;
-                    } else {
-                        return Err(e);
-                    };
-                    continue;
-                }
+                Err(e) => match &e {
+                    OrientError::Request(r) => {
+                        if n > 0 && r.code == 3 {
+                            n -= 1;
+                        } else {
+                            return Err(e);
+                        };
+                        continue;
+                    }
+                    _ => return Err(e),
+                },
             }
         }
     }

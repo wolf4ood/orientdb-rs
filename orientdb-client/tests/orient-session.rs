@@ -355,13 +355,15 @@ mod asynchronous {
         block_on(async {
             let session = session("async_session_query_test_with_retry").await;
             let result: Vec<_> = session
-                .with_retry(10, |sess| sess.query("select from OUser").page_size(1))
+                .with_retry(10, |s| {
+                    async move { s.query("select from OUser").page_size(1).run().await }
+                })
                 .await
                 .unwrap()
                 .collect()
                 .await;
 
-            assert_eq!(3, result_len());
+            assert_eq!(3, result.len());
         })
     }
 }
