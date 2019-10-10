@@ -88,7 +88,7 @@ impl OSession {
     }
 
     pub fn command<T: Into<String>>(&self, command: T) -> Statement {
-        Statement::new(self, command.into(), 1).mode(0)
+        Statement::new(self, command.into()).mode(0)
     }
 
     pub fn script_sql<T: Into<String>>(&self, script: T) -> Statement {
