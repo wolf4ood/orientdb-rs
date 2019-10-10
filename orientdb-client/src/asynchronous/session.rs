@@ -84,7 +84,7 @@ impl OSession {
     }
 
     pub fn query<T: Into<String>>(&self, query: T) -> Statement {
-        Statement::new(self, query.into(), 1)
+        Statement::new(self, query.into())
     }
 
     pub fn command<T: Into<String>>(&self, command: T) -> Statement {
@@ -92,12 +92,12 @@ impl OSession {
     }
 
     pub fn script_sql<T: Into<String>>(&self, script: T) -> Statement {
-        Statement::new(self, script.into(), 1)
+        Statement::new(self, script.into())
             .mode(2)
             .language(String::from("SQL"))
     }
     pub fn script<T: Into<String>, S: Into<String>>(&self, script: T, language: S) -> Statement {
-        Statement::new(self, script.into(), 1)
+        Statement::new(self, script.into())
             .mode(2)
             .language(language.into())
     }
