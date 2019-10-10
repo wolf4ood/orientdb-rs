@@ -354,11 +354,13 @@ mod asynchronous {
     fn session_query_test_with_retry() {
         block_on(async {
             let session = session("async_session_query_test_with_retry").await;
-            let result: Vec<_> = session.with_retry(10, |sess| {
-                sess.query("select from OUser")
-                    .page_size(1)
-            }).await.unwrap().collect().await;
-            
+            let result: Vec<_> = session
+                .with_retry(10, |sess| sess.query("select from OUser").page_size(1))
+                .await
+                .unwrap()
+                .collect()
+                .await;
+
             assert_eq!(3, result_len());
         })
     }
