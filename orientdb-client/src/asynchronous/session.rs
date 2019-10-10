@@ -6,11 +6,11 @@ use super::statement::Statement;
 use crate::common::protocol::messages::request::{Close, Query};
 use crate::common::protocol::messages::response;
 use crate::{OrientError, OrientResult};
-use async_trait::async_trait;
 use async_std::future::Future;
-use std::sync::Arc;
+use async_trait::async_trait;
 use std::convert::From;
 use std::pin::Pin;
+use std::sync::Arc;
 
 use super::types::resultset::PagedResultSet;
 
@@ -22,7 +22,6 @@ use futures::Stream;
 pub struct OSessionRetry<'session>(&'session OSession);
 
 impl<'session> OSessionRetry<'session> {
-
     pub fn new(session: &'session OSession) -> Self {
         OSessionRetry(session)
     }
@@ -36,11 +35,11 @@ impl<'session> OSessionRetry<'session> {
     }
 
     pub fn script_sql<SCRIPT: Into<String>>(&self, script: SCRIPT) -> Statement {
-        Statement::new(self.0, script.into()) 
+        Statement::new(self.0, script.into())
             .mode(2)
             .language(String::from("SQL"))
     }
-    
+
     pub fn script<SCRIPT, LANGUAGE>(&self, script: SCRIPT, language: LANGUAGE) -> Statement
     where
         SCRIPT: Into<String>,
@@ -49,7 +48,6 @@ impl<'session> OSessionRetry<'session> {
         Statement::new(self.0, script.into())
             .mode(2)
             .language(language.into())
-
     }
 }
 
@@ -107,16 +105,22 @@ impl OSession {
     pub async fn with_retry<'session, FN, T, RETURN>(&self, mut n: u32, f: FN) -> OrientResult<T>
     where
         RETURN: Future<Output = OrientResult<T>>,
-        FN: Fn(OSessionRetry) -> RETURN
+        FN: Fn(OSessionRetry) -> RETURN,
     {
-        if n == 0 { panic!("retry must be called with a number greater than 0") };
+        if n == 0 {
+            panic!("retry must be called with a number greater than 0")
+        };
         loop {
             let retry_session = OSessionRetry::new(self);
             let stmt: Statement = f(retry_session).await;
             match stmt.run().await {
                 Ok(t) => return Ok(t),
                 Err(e) => {
-                    if n > 0 { n -= 1; } else { return Err(e) };
+                    if n > 0 {
+                        n -= 1;
+                    } else {
+                        return Err(e);
+                    };
                     continue;
                 }
             }
