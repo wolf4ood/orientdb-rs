@@ -102,7 +102,7 @@ in order to specify the version of OrientDB
 
 ```
 cd docker-compose
-export ORIENTDB_SERVER=3.0.23
+export ORIENTDB_VERSION=3.0.23
 docker-compose up -d
 cd ..
 cargo test
