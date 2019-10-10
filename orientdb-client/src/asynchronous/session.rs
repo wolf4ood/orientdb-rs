@@ -86,27 +86,28 @@ impl OSession {
     }
 
     pub fn query<T: Into<String>>(&self, query: T) -> Statement {
-        Statement::new(self, query.into())
+        Statement::new(self, query.into(), 1)
     }
 
     pub fn command<T: Into<String>>(&self, command: T) -> Statement {
-        Statement::new(self, command.into()).mode(0)
+        Statement::new(self, command.into(), 1).mode(0)
     }
 
     pub fn script_sql<T: Into<String>>(&self, script: T) -> Statement {
-        Statement::new(self, script.into())
+        Statement::new(self, script.into(), 1)
             .mode(2)
             .language(String::from("SQL"))
     }
     pub fn script<T: Into<String>, S: Into<String>>(&self, script: T, language: S) -> Statement {
-        Statement::new(self, script.into())
+        Statement::new(self, script.into(), 1)
             .mode(2)
             .language(language.into())
     }
 
-    pub async fn retry<'session, F>(&self, mut n: u32, f: F) -> OrientResult<impl Stream<Item = OrientResult<OResult>>>
+    pub async fn with_retry<'session, FN, T, RETURN>(&self, mut n: u32, f: FN) -> OrientResult<T>
     where
-        F: Fn(OSessionRetry) -> Pin<Box<dyn Future<Output = Statement<'session>>>>
+        RETURN: Future<Output = OrientResult<T>>,
+        FN: Fn(OSessionRetry) -> RETURN
     {
         if n == 0 { panic!("retry must be called with a number greater than 0") };
         loop {
