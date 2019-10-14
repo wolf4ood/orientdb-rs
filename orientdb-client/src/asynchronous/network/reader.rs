@@ -4,9 +4,10 @@ use async_std::prelude::*;
 use byteorder::{BigEndian, ReadBytesExt};
 use std::io::Cursor;
 
+use async_std::io::BufReader;
 use async_std::net::TcpStream;
 
-pub async fn read_i8(buf: &mut TcpStream) -> OrientResult<i8> {
+pub async fn read_i8(buf: &mut BufReader<&TcpStream>) -> OrientResult<i8> {
     let mut buffer = vec![0u8; 1];
     buf.read(&mut buffer).await?;
     let mut cursor = Cursor::new(buffer);
@@ -14,7 +15,7 @@ pub async fn read_i8(buf: &mut TcpStream) -> OrientResult<i8> {
     Ok(res)
 }
 
-pub async fn read_i32(buf: &mut TcpStream) -> OrientResult<i32> {
+pub async fn read_i32(buf: &mut BufReader<&TcpStream>) -> OrientResult<i32> {
     let mut buffer = vec![0u8; 4];
     buf.read(&mut buffer).await?;
     let mut cursor = Cursor::new(buffer);
@@ -22,7 +23,7 @@ pub async fn read_i32(buf: &mut TcpStream) -> OrientResult<i32> {
     Ok(res)
 }
 
-pub async fn read_i64(buf: &mut TcpStream) -> OrientResult<i64> {
+pub async fn read_i64(buf: &mut BufReader<&TcpStream>) -> OrientResult<i64> {
     let mut buffer = vec![0u8; 8];
     buf.read(&mut buffer).await?;
     let mut cursor = Cursor::new(buffer);
@@ -30,13 +31,13 @@ pub async fn read_i64(buf: &mut TcpStream) -> OrientResult<i64> {
     Ok(res)
 }
 
-pub async fn read_identity(buf: &mut TcpStream) -> OrientResult<ORecordID> {
+pub async fn read_identity(buf: &mut BufReader<&TcpStream>) -> OrientResult<ORecordID> {
     let cluster_id = read_i16(buf).await?;
     let cluster_position = read_i64(buf).await?;
     Ok(ORecordID::new(cluster_id, cluster_position))
 }
 
-pub async fn read_i16(buf: &mut TcpStream) -> OrientResult<i16> {
+pub async fn read_i16(buf: &mut BufReader<&TcpStream>) -> OrientResult<i16> {
     let mut buffer = vec![0u8; 2];
     buf.read(&mut buffer).await?;
     let mut cursor = Cursor::new(buffer);
@@ -44,7 +45,7 @@ pub async fn read_i16(buf: &mut TcpStream) -> OrientResult<i16> {
     Ok(res)
 }
 
-pub async fn read_bool(buf: &mut TcpStream) -> OrientResult<bool> {
+pub async fn read_bool(buf: &mut BufReader<&TcpStream>) -> OrientResult<bool> {
     let e = read_i8(buf).await?;
     let val = match e {
         0 => false,
@@ -54,7 +55,7 @@ pub async fn read_bool(buf: &mut TcpStream) -> OrientResult<bool> {
     Ok(val)
 }
 
-pub async fn read_optional_bytes(buf: &mut TcpStream) -> OrientResult<Option<Vec<u8>>> {
+pub async fn read_optional_bytes(buf: &mut BufReader<&TcpStream>) -> OrientResult<Option<Vec<u8>>> {
     let size = read_i32(buf).await?;
     let mut buff;
     if size == -1 {
@@ -66,7 +67,7 @@ pub async fn read_optional_bytes(buf: &mut TcpStream) -> OrientResult<Option<Vec
     Ok(Some(buff))
 }
 
-pub async fn read_bytes(buf: &mut TcpStream) -> OrientResult<Vec<u8>> {
+pub async fn read_bytes(buf: &mut BufReader<&TcpStream>) -> OrientResult<Vec<u8>> {
     let size = read_i32(buf).await?;
     let mut buff;
     if size == -1 {
@@ -78,7 +79,7 @@ pub async fn read_bytes(buf: &mut TcpStream) -> OrientResult<Vec<u8>> {
     Ok(buff)
 }
 
-pub async fn read_string(buf: &mut TcpStream) -> OrientResult<String> {
+pub async fn read_string(buf: &mut BufReader<&TcpStream>) -> OrientResult<String> {
     let bytes = read_bytes(buf).await?;
     let res = String::from_utf8(bytes)?;
     Ok(res)

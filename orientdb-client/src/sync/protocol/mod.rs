@@ -21,6 +21,7 @@ pub mod messages {
 use crate::sync::protocol::v37::Protocol37;
 use std::io::Read;
 
+#[derive(Clone)]
 pub(crate) struct WiredProtocol {
     pub version: i16,
 }
