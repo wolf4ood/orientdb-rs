@@ -112,9 +112,7 @@ fn responder_loop(
                     drop(guard);
                     s.send(response).unwrap();
                 }
-                None => {
-                    
-                }
+                None => {}
             }
         }
     });
