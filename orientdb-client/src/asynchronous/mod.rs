@@ -7,3 +7,4 @@ pub mod types;
 
 pub use client::OrientDB;
 pub use session::OSession;
+pub use session::SessionPool;

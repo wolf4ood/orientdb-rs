@@ -232,7 +232,7 @@ fn crate_schema(session: &OSession) {
 
 #[cfg(feature = "async")]
 mod asynchronous {
-    use super::common::asynchronous::session;
+    use super::common::asynchronous::{session, sessions};
 
     use async_std::task::block_on;
     use futures::StreamExt;
@@ -352,18 +352,58 @@ mod asynchronous {
 
     #[test]
     fn session_query_test_with_retry() {
+        use async_std::task;
+        use orientdb_client::types::OResult;
+        use std::sync::atomic::{AtomicI64, Ordering};
+        use std::sync::Arc;
+
         block_on(async {
-            let session = session("async_session_query_test_with_retry").await;
-            let result: Vec<_> = session
-                .with_retry(10, |s| {
-                    async move { s.query("select from OUser").page_size(1).run().await }
-                })
+            let pool = sessions("async_session_query_test_with_retry").await;
+
+            let counter = Arc::new(AtomicI64::new(0));
+            let session = pool.get().await.unwrap();
+
+            let _result: Vec<Result<OResult, _>> = session
+                .command("insert into V set id = 1")
+                .run()
                 .await
                 .unwrap()
                 .collect()
                 .await;
 
-            assert_eq!(3, result.len());
+            let _result: Vec<Result<OResult, _>> = session
+                .command("insert into V set id = 2")
+                .run()
+                .await
+                .unwrap()
+                .collect()
+                .await;
+
+            drop(session);
+
+            let handles : Vec<_> =(0..10).map(|_| {
+                let cloned = pool.clone();
+                let new_counter = counter.clone();
+                task::spawn( async move {
+                    let s = cloned.get().await.unwrap();
+                    let inner_resut = s.with_retry(10,|s| async move {
+                        s.command("create edge from (select from v where id = '1') to (select from v where id = '2')").run().await
+                    }).await;
+
+                    match inner_resut {
+                        Ok(_e) => {
+                            new_counter.fetch_add(1,Ordering::SeqCst);
+                        },
+                        _=> {}
+                    };
+                })
+            }).collect();
+
+            for t in handles {
+                t.await;
+            }
+
+            assert_eq!(10, counter.load(Ordering::SeqCst));
         })
     }
 }

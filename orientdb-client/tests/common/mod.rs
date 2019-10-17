@@ -160,7 +160,7 @@ impl<'a, T: Fn(&OSession)> ODBTest<'a, T> {
 #[cfg(feature = "async")]
 pub mod asynchronous {
     use super::{config, OrientDBTest};
-    use orientdb_client::asynchronous::{OSession, OrientDB};
+    use orientdb_client::asynchronous::{OSession, OrientDB, SessionPool};
     use orientdb_client::DatabaseType;
 
     pub async fn connect() -> OrientDB {
@@ -179,6 +179,20 @@ pub mod asynchronous {
 
         let result = driver
             .session(&db, &config.username, &config.password)
+            .await;
+        assert!(result.is_ok(), result.err());
+        result.unwrap()
+    }
+
+    #[allow(dead_code)]
+    pub async fn sessions(db: &str) -> SessionPool {
+        let driver = connect().await;
+        let config = config();
+
+        create_database(db, &driver, &config).await;
+
+        let result = driver
+            .sessions(&db, &config.username, &config.password, None, None)
             .await;
         assert!(result.is_ok(), result.err());
         result.unwrap()
