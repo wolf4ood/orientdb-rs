@@ -406,4 +406,36 @@ mod asynchronous {
             assert_eq!(10, counter.load(Ordering::SeqCst));
         })
     }
+
+    #[test]
+    fn live_query_test() {
+        use async_std::task;
+        use orientdb_client::types::OResult;
+        use std::sync::atomic::{AtomicI64, Ordering};
+        use std::sync::Arc;
+
+        block_on(async {
+            let pool = sessions("live_query_test").await;
+
+            let session = pool.get().await.unwrap();
+
+            let (unsubscriber, mut stream) = session.live_query("select from V").await.unwrap();
+
+            let inner_session = pool.get().await.unwrap();
+            task::spawn(async move {
+                inner_session
+                    .command("insert into v set id = 1")
+                    .run()
+                    .await;
+            });
+
+            let counter = 0;
+            while let Some(item) = stream.next().await {
+
+                println!("{:?}",item);
+            }
+
+            assert_eq!(1, counter);
+        })
+    }
 }

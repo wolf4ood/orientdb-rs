@@ -3,7 +3,7 @@ use super::network::cluster::{Cluster, Server};
 use super::c3p0::{ConnectionManger, Pool, PooledConnection};
 use super::client::OrientDBClientInternal;
 use super::statement::Statement;
-use crate::common::protocol::messages::request::{Close, Query};
+use crate::common::protocol::messages::request::{Close, LiveQuery, Query};
 use crate::common::protocol::messages::response;
 use crate::{OrientError, OrientResult};
 use async_std::future::Future;
@@ -12,10 +12,13 @@ use std::convert::From;
 use std::sync::Arc;
 
 use super::types::resultset::PagedResultSet;
+use futures::channel::mpsc;
 
+use super::live::{LiveResult, Unsubscriber};
 use crate::asynchronous::c3p0::{C3p0Error, C3p0Result};
 use crate::common::types::OResult;
 use futures::Stream;
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct OSessionRetry<'session>(&'session OSession);
@@ -131,6 +134,35 @@ impl OSession {
                 },
             }
         }
+    }
+
+    pub async fn live_query<T: Into<String>>(
+        &self,
+        query: T,
+    ) -> OrientResult<(Unsubscriber, impl Stream<Item = OrientResult<LiveResult>>)> {
+        let mut conn = self.server.connection().await?;
+
+        let (sender, receiver) = mpsc::unbounded();
+
+        let q: response::LiveQuery = conn
+            .send(
+                LiveQuery::new(
+                    self.session_id,
+                    self.token.clone(),
+                    query.into(),
+                    HashMap::new(),
+                    true,
+                )
+                .into(),
+            )
+            .await?
+            .payload();
+
+        conn.register_handler(q.monitor_id, sender).await?;
+
+        let unsubscriber = Unsubscriber::new(q.monitor_id, self.server.clone());
+
+        Ok((unsubscriber, receiver))
     }
 
     pub(crate) async fn run(

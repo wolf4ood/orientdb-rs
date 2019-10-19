@@ -1,5 +1,6 @@
 pub mod c3p0;
 pub mod client;
+pub mod live;
 pub mod network;
 pub mod session;
 pub mod statement;

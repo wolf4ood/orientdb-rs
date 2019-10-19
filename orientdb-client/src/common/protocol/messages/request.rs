@@ -91,6 +91,38 @@ impl From<Open> for Request {
     }
 }
 
+#[derive(Debug)]
+pub struct LiveQuery {
+    pub session_id: i32,
+    pub token: Option<Vec<u8>>,
+    pub query: String,
+    pub parameters: HashMap<String, OValue>,
+    pub named: bool,
+}
+
+impl LiveQuery {
+    pub fn new<T: Into<String>>(
+        session_id: i32,
+        token: Option<Vec<u8>>,
+        query: T,
+        parameters: HashMap<String, OValue>,
+        named: bool,
+    ) -> LiveQuery {
+        LiveQuery {
+            session_id,
+            token,
+            query: query.into(),
+            parameters,
+            named,
+        }
+    }
+}
+
+impl From<LiveQuery> for Request {
+    fn from(input: LiveQuery) -> Request {
+        Request::LiveQuery(input)
+    }
+}
 // Query Message
 #[derive(Debug)]
 pub struct Query {
@@ -302,6 +334,7 @@ pub enum Request {
     DropDB(DropDB),
     Open(Open),
     Query(Query),
+    LiveQuery(LiveQuery),
     QueryNext(QueryNext),
     QueryClose(QueryClose),
     Close(Close),

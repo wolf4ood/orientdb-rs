@@ -13,10 +13,11 @@ use futures::channel::mpsc;
 use futures::channel::oneshot;
 
 use crate::common::protocol::messages::request::HandShake;
-use crate::common::protocol::messages::{Request, Response};
+use crate::common::protocol::messages::{response::Status, Request, Response,response::LiveQueryResult};
 use crate::sync::protocol::WiredProtocol;
 use crate::{OrientError, OrientResult};
 
+use super::super::live::{LiveQueryManager, LiveResult};
 use super::decoder::decode;
 use super::reader;
 
@@ -33,6 +34,7 @@ pub enum Cmd {
 
 pub struct Connection {
     sender: mpsc::UnboundedSender<ChannelMsg>,
+    live_query_manager: Arc<LiveQueryManager>,
 }
 
 impl std::fmt::Debug for Connection {
@@ -84,6 +86,7 @@ fn responder_loop(
     stream: Arc<TcpStream>,
     queue: Arc<Mutex<VecDeque<ResponseChannel>>>,
     protocol: WiredProtocol,
+    live_manager: Arc<LiveQueryManager>,
     shutdown_flag: Arc<AtomicBool>,
 ) {
     task::spawn(async move {
@@ -105,15 +108,30 @@ fn responder_loop(
                 }
             }
 
-            let mut guard = queue.lock().await;
+            let result = match response {
+                Ok(mut r) => match r.header.status {
+                    Status::PUSH =>  {
+                        let live_result : LiveQueryResult = r.payload::<LiveQueryResult>();
+                        live_manager.fire_event(live_result).await.unwrap();
+                        None
+                    },
+                    _ => Some(Ok(r)),
+                },
+                Err(e) => Some(Err(e)),
+            };
 
-            match guard.pop_front() {
-                Some(s) => {
-                    drop(guard);
-                    s.send(response).unwrap();
+            if let Some(response) = result {
+                let mut guard = queue.lock().await;
+
+                match guard.pop_front() {
+                    Some(s) => {
+                        drop(guard);
+                        s.send(response).unwrap();
+                    }
+                    None => {}
                 }
-                None => {}
             }
+            
         }
     });
 }
@@ -129,7 +147,12 @@ impl Connection {
 
         let (sender, receiver) = mpsc::unbounded();
 
-        let conn = Connection { sender };
+        let live_query_manager = Arc::new(LiveQueryManager::default());
+
+        let conn = Connection {
+            sender,
+            live_query_manager: live_query_manager.clone(),
+        };
 
         let shared = Arc::new(stream);
         let shutdown_flag = Arc::new(AtomicBool::new(false));
@@ -146,7 +169,7 @@ impl Connection {
             shutdown_flag.clone(),
         );
 
-        responder_loop(shared, queue, protocol, shutdown_flag);
+        responder_loop(shared, queue, protocol, live_query_manager, shutdown_flag);
 
         conn.handshake(p_version).await
     }
@@ -170,6 +193,16 @@ impl Connection {
         let result = receiver.await.unwrap();
 
         return result;
+    }
+
+    pub async fn register_handler(
+        &self,
+        monitor_id: i32,
+        sender: mpsc::UnboundedSender<OrientResult<LiveResult>>,
+    ) -> OrientResult<()> {
+        self.live_query_manager
+            .register_handler(monitor_id, sender)
+            .await
     }
 
     pub async fn send(&mut self, request: Request) -> OrientResult<Response> {

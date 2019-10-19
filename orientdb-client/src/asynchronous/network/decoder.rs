@@ -12,8 +12,10 @@ use async_trait::async_trait;
 
 use super::reader;
 
+use crate::asynchronous::live::LiveResult;
+
 use crate::common::protocol::messages::response::{
-    Connect, CreateDB, DropDB, ExistDB, Header, Open, Query, QueryClose,
+    Connect, CreateDB, DropDB, ExistDB, Header, LiveQuery, LiveQueryResult, Open, Query, QueryClose,
 };
 use crate::common::types::error::{OError, RequestError};
 use crate::common::types::OResult;
@@ -35,18 +37,27 @@ struct Protocol37 {}
 impl VersionedDecoder for Protocol37 {
     async fn decode_header(buf: &mut BufReader<&TcpStream>) -> OrientResult<Header> {
         let status = reader::read_i8(buf).await?;
-        let session_id = reader::read_i32(buf).await?;
 
-        let token = reader::read_optional_bytes(buf).await?;
-        let op = reader::read_i8(buf).await?;
-
-        Ok(Header {
-            status: Status::from(status),
-            client_id: None,
-            session_id,
-            token,
-            op,
-        })
+        if status == 3 {
+            Ok(Header {
+                status: Status::from(status),
+                client_id: None,
+                session_id: -1,
+                token: None,
+                op: 100,
+            })
+        } else {
+            let session_id = reader::read_i32(buf).await?;
+            let token = reader::read_optional_bytes(buf).await?;
+            let op = reader::read_i8(buf).await?;
+            Ok(Header {
+                status: Status::from(status),
+                client_id: None,
+                session_id,
+                token,
+                op,
+            })
+        }
     }
     async fn decode_open(buf: &mut BufReader<&TcpStream>) -> OrientResult<Open> {
         let session_id = reader::read_i32(buf).await?;
@@ -77,6 +88,52 @@ impl VersionedDecoder for Protocol37 {
             errors,
             serialized: _serialized_exception,
         })
+    }
+    async fn decode_live_query(buf: &mut BufReader<&TcpStream>) -> OrientResult<LiveQuery> {
+        let monitor_id = reader::read_i32(buf).await?;
+
+        Ok(LiveQuery { monitor_id })
+    }
+    async fn decode_live_query_result(
+        buf: &mut BufReader<&TcpStream>,
+    ) -> OrientResult<LiveQueryResult> {
+        let push_type = reader::read_i8(buf).await?;
+
+        let monitor_id = reader::read_i32(buf).await?;
+
+        let status = reader::read_i8(buf).await?;
+
+        let n_of_events = reader::read_i32(buf).await?;
+
+        let mut events = vec![];
+        for _ in (0..n_of_events) {
+            let e_type = reader::read_i8(buf).await?;
+
+            let event = match e_type {
+                // Create Event
+                1 => {
+                    let result = read_result(buf).await?;
+                    LiveResult::Created(result)
+                }
+                // Update Event
+                2 => {
+                    let result = read_result(buf).await?;
+                    let before = read_result(buf).await?;
+
+                    LiveResult::Updated((before, result))
+                }
+                // Delete Event
+                3 => {
+                    let result = read_result(buf).await?;
+                    LiveResult::Deleted(result)
+                }
+                _ => panic!("Event not supported"),
+            };
+
+            events.push(event);
+        }
+
+        Ok(LiveQueryResult::new(monitor_id, events))
     }
     async fn decode_query(buf: &mut BufReader<&TcpStream>) -> OrientResult<Query> {
         let query_id = reader::read_string(buf).await?;
@@ -125,6 +182,12 @@ pub trait VersionedDecoder {
 
     async fn decode_query(buf: &mut BufReader<&TcpStream>) -> OrientResult<Query>;
 
+    async fn decode_live_query(buf: &mut BufReader<&TcpStream>) -> OrientResult<LiveQuery>;
+
+    async fn decode_live_query_result(
+        buf: &mut BufReader<&TcpStream>,
+    ) -> OrientResult<LiveQueryResult>;
+
     async fn decode_connect(buf: &mut BufReader<&TcpStream>) -> OrientResult<Connect>;
 
     async fn decode_exist(buf: &mut BufReader<&TcpStream>) -> OrientResult<ExistDB>;
@@ -150,7 +213,7 @@ pub async fn decode_with<T: VersionedDecoder>(
 
     let payload = match header.status {
         Status::ERROR => return Err(OrientError::Request(T::decode_errors(buf).await?)),
-        _ => match header.op {
+        Status::OK => match header.op {
             2 => T::decode_connect(buf).await?.into(),
             3 => T::decode_open(buf).await?.into(),
             4 => T::decode_create_db(buf).await?.into(),
@@ -159,6 +222,7 @@ pub async fn decode_with<T: VersionedDecoder>(
             45 => T::decode_query(buf).await?.into(),
             46 => T::decode_query_close(buf).await?.into(),
             47 => T::decode_query(buf).await?.into(),
+            100 => T::decode_live_query(buf).await?.into(),
             _ => {
                 return Err(OrientError::Protocol(format!(
                     "Request {:?} not supported",
@@ -166,6 +230,7 @@ pub async fn decode_with<T: VersionedDecoder>(
                 )))
             }
         },
+        Status::PUSH => T::decode_live_query_result(buf).await?.into(),
     };
     Ok(Response::new(header, payload))
 }
