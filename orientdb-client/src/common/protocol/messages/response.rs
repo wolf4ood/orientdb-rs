@@ -1,3 +1,4 @@
+use crate::asynchronous::live::LiveResult;
 use crate::common::types::result::OResult;
 use std::collections::HashMap;
 use std::collections::VecDeque;
@@ -73,6 +74,34 @@ impl From<Connect> for ResponseType {
     }
 }
 
+#[derive(Debug)]
+pub struct LiveQueryResult {
+    pub monitor_id: i32,
+    pub events: Vec<LiveResult>,
+}
+
+impl LiveQueryResult {
+    pub fn new(monitor_id: i32, events: Vec<LiveResult>) -> LiveQueryResult {
+        LiveQueryResult { monitor_id, events }
+    }
+}
+
+impl From<LiveQueryResult> for ResponseType {
+    fn from(input: LiveQueryResult) -> ResponseType {
+        ResponseType::LiveQueryResult(Some(input))
+    }
+}
+
+#[derive(Debug)]
+pub struct LiveQuery {
+    pub monitor_id: i32,
+}
+
+impl From<LiveQuery> for ResponseType {
+    fn from(input: LiveQuery) -> ResponseType {
+        ResponseType::LiveQuery(Some(input))
+    }
+}
 #[derive(Debug)]
 pub struct Query {
     pub query_id: String,
@@ -166,6 +195,8 @@ pub enum ResponseType {
     CreateDB(Option<CreateDB>),
     ExistDB(Option<ExistDB>),
     DropDB(Option<DropDB>),
+    LiveQuery(Option<LiveQuery>),
+    LiveQueryResult(Option<LiveQueryResult>),
     QueryClose(Option<QueryClose>),
 }
 
@@ -221,3 +252,5 @@ impl_payload!(CreateDB);
 impl_payload!(DropDB);
 impl_payload!(ExistDB);
 impl_payload!(Connect);
+impl_payload!(LiveQuery);
+impl_payload!(LiveQueryResult);

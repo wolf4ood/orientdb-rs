@@ -59,6 +59,7 @@ impl WiredProtocol {
             Request::DropDB(drop) => T::encode_drop_db(&mut buffer, drop),
             Request::Close(close) => T::encode_close(&mut buffer, close),
             Request::Query(query) => T::encode_query(&mut buffer, query),
+            Request::LiveQuery(query) => T::encode_live_query(&mut buffer, query),
             Request::QueryNext(next) => T::encode_query_next(&mut buffer, next),
             Request::QueryClose(query_close) => T::encode_query_close(&mut buffer, query_close),
         }?;

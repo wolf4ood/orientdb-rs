@@ -1,7 +1,8 @@
 use super::super::v37::Protocol37;
 use crate::common::protocol::buffer::OBuffer;
 use crate::common::protocol::messages::request::{
-    Close, Connect, CreateDB, DropDB, ExistDB, HandShake, Open, Query, QueryClose, QueryNext,
+    Close, Connect, CreateDB, DropDB, ExistDB, HandShake, LiveQuery, Open, Query, QueryClose,
+    QueryNext,
 };
 use crate::common::protocol::serializer::DocumentSerializer;
 use crate::common::types::document::ODocument;
@@ -84,6 +85,23 @@ impl VersionedEncoder for Protocol37 {
         buf.write_str(drop.db_mode.as_str())?;
         Ok(())
     }
+    fn encode_live_query(buf: &mut OBuffer, query: LiveQuery) -> OrientResult<()> {
+        buf.put_i8(100)?;
+        buf.put_i32(query.session_id)?;
+        if let Some(t) = query.token {
+            buf.write_slice(&t)?;
+        }
+        buf.put_i8(2)?;
+
+        buf.write_str(&query.query)?;
+        let mut document = ODocument::empty();
+        document.set("params", query.parameters);
+        let encoded = Protocol37::encode_document(&document)?;
+        buf.write_slice(encoded.as_slice())?;
+        buf.write_bool(query.named)?;
+
+        Ok(())
+    }
     fn encode_query(buf: &mut OBuffer, query: Query) -> OrientResult<()> {
         buf.put_i8(45)?;
         buf.put_i32(query.session_id)?;
@@ -104,6 +122,7 @@ impl VersionedEncoder for Protocol37 {
 
         Ok(())
     }
+
     fn encode_query_next(buf: &mut OBuffer, next: QueryNext) -> OrientResult<()> {
         buf.put_i8(47)?;
         buf.put_i32(next.session_id)?;
