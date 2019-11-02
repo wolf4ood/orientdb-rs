@@ -11,14 +11,14 @@ use async_trait::async_trait;
 use std::convert::From;
 use std::sync::Arc;
 
-use super::types::resultset::PagedResultSet;
-use futures::channel::mpsc;
-
 use super::live::{LiveResult, Unsubscriber};
+use super::types::resultset::PagedResultSet;
 use crate::asynchronous::c3p0::{C3p0Error, C3p0Result};
 use crate::common::types::OResult;
 use futures::Stream;
 use std::collections::HashMap;
+
+use async_std::sync::channel;
 
 #[derive(Debug)]
 pub struct OSessionRetry<'session>(&'session OSession);
@@ -142,7 +142,7 @@ impl OSession {
     ) -> OrientResult<(Unsubscriber, impl Stream<Item = OrientResult<LiveResult>>)> {
         let mut conn = self.server.connection().await?;
 
-        let (sender, receiver) = mpsc::unbounded();
+        let (sender, receiver) = channel(10);
 
         let q: response::LiveQuery = conn
             .send(

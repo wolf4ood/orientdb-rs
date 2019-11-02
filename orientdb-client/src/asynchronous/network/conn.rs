@@ -9,8 +9,6 @@ use async_std::net::TcpStream;
 use async_std::prelude::*;
 use async_std::sync::Mutex;
 use async_std::task;
-use futures::channel::mpsc;
-use futures::channel::oneshot;
 
 use crate::common::protocol::messages::request::HandShake;
 use crate::common::protocol::messages::{
@@ -25,17 +23,19 @@ use super::reader;
 
 pub type ChannelMsg = Cmd;
 
-pub type ResponseChannel = oneshot::Sender<OrientResult<Response>>;
+pub type ResponseChannel = Sender<OrientResult<Response>>;
+
+use async_std::sync::{channel, Receiver, Sender};
 
 #[derive(Debug)]
 pub enum Cmd {
-    Msg((oneshot::Sender<OrientResult<Response>>, Request)),
-    MsgNoResponse((oneshot::Sender<OrientResult<()>>, Request)),
+    Msg((Sender<OrientResult<Response>>, Request)),
+    MsgNoResponse((Sender<OrientResult<()>>, Request)),
     Shutdown,
 }
 
 pub struct Connection {
-    sender: mpsc::UnboundedSender<ChannelMsg>,
+    sender: Sender<ChannelMsg>,
     live_query_manager: Arc<LiveQueryManager>,
 }
 
@@ -47,7 +47,7 @@ impl std::fmt::Debug for Connection {
 
 fn sender_loop(
     stream: Arc<TcpStream>,
-    mut channel: mpsc::UnboundedReceiver<ChannelMsg>,
+    mut channel: Receiver<ChannelMsg>,
     queue: Arc<Mutex<VecDeque<ResponseChannel>>>,
     mut protocol: WiredProtocol,
     shutdown_flag: Arc<AtomicBool>,
@@ -67,7 +67,7 @@ fn sender_loop(
                     Cmd::MsgNoResponse(m) => {
                         let buf = protocol.encode(m.1).unwrap();
                         stream.write_all(buf.as_slice()).await.unwrap();
-                        m.0.send(Ok(())).unwrap();
+                        m.0.send(Ok(())).await;
                     }
                     Cmd::Shutdown => {
                         shutdown_flag.store(true, Ordering::SeqCst);
@@ -128,7 +128,7 @@ fn responder_loop(
                 match guard.pop_front() {
                     Some(s) => {
                         drop(guard);
-                        s.send(response).unwrap();
+                        s.send(response).await;
                     }
                     None => {}
                 }
@@ -146,7 +146,7 @@ impl Connection {
         let p = reader::read_i16(&mut buf).await?;
         let protocol = WiredProtocol::from_version(p)?;
 
-        let (sender, receiver) = mpsc::unbounded();
+        let (sender, receiver) = channel(20);
 
         let live_query_manager = Arc::new(LiveQueryManager::default());
 
@@ -186,12 +186,13 @@ impl Connection {
     }
 
     pub(crate) async fn send_and_forget(&mut self, request: Request) -> OrientResult<()> {
-        let (sender, receiver) = oneshot::channel();
+        let (sender, receiver) = channel(1);
 
-        mpsc::UnboundedSender::unbounded_send(&self.sender, Cmd::MsgNoResponse((sender, request)))
-            .unwrap();
+        self.sender
+            .send(Cmd::MsgNoResponse((sender, request)))
+            .await;
 
-        let result = receiver.await.unwrap();
+        let result = receiver.recv().await.unwrap();
 
         return result;
     }
@@ -199,7 +200,7 @@ impl Connection {
     pub async fn register_handler(
         &self,
         monitor_id: i32,
-        sender: mpsc::UnboundedSender<OrientResult<LiveResult>>,
+        sender: Sender<OrientResult<LiveResult>>,
     ) -> OrientResult<()> {
         self.live_query_manager
             .register_handler(monitor_id, sender)
@@ -207,13 +208,13 @@ impl Connection {
     }
 
     pub async fn send(&mut self, request: Request) -> OrientResult<Response> {
-        let (sender, receiver) = oneshot::channel();
-        mpsc::UnboundedSender::unbounded_send(&self.sender, Cmd::Msg((sender, request))).unwrap();
-        receiver.await.unwrap()
+        let (sender, receiver) = channel(1);
+        self.sender.send(Cmd::Msg((sender, request))).await;
+        receiver.recv().await.unwrap()
     }
 
-    pub fn close(self) -> OrientResult<()> {
-        mpsc::UnboundedSender::unbounded_send(&self.sender, Cmd::Shutdown).unwrap();
+    pub async fn close(self) -> OrientResult<()> {
+        &self.sender.send(Cmd::Shutdown).await;
         Ok(())
     }
 }

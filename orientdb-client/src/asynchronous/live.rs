@@ -8,7 +8,8 @@ use crate::common::protocol::messages::request::UnsubscribeLiveQuery;
 use crate::common::protocol::messages::response::LiveQueryResult;
 
 use crate::OrientResult;
-use futures::channel::mpsc::UnboundedSender;
+
+use async_std::sync::Sender;
 
 #[derive(Debug)]
 pub enum LiveResult {
@@ -52,14 +53,14 @@ impl Unsubscriber {
 }
 
 pub struct LiveQueryManager {
-    live_queries: Mutex<HashMap<i32, UnboundedSender<OrientResult<LiveResult>>>>,
+    live_queries: Mutex<HashMap<i32, Sender<OrientResult<LiveResult>>>>,
 }
 
 impl LiveQueryManager {
     pub async fn register_handler(
         &self,
         monitor_id: i32,
-        sender: UnboundedSender<OrientResult<LiveResult>>,
+        sender: Sender<OrientResult<LiveResult>>,
     ) -> OrientResult<()> {
         let mut guard = self.live_queries.lock().await;
         guard.insert(monitor_id, sender);
@@ -72,14 +73,14 @@ impl LiveQueryManager {
         if evt.ended {
             if let Some(handler) = guard.remove(&evt.monitor_id) {
                 while let Some(e) = evt.events.pop() {
-                    UnboundedSender::unbounded_send(&handler, Ok(e)).unwrap();
+                    handler.send(Ok(e)).await;
                 }
                 drop(handler);
             }
         } else {
             if let Some(handler) = guard.get(&evt.monitor_id) {
                 while let Some(e) = evt.events.pop() {
-                    UnboundedSender::unbounded_send(handler, Ok(e)).unwrap();
+                    handler.send(Ok(e)).await;
                 }
             }
         }

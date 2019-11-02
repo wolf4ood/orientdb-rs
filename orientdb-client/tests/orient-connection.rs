@@ -73,7 +73,7 @@ mod asynchronous {
             assert!(res.is_ok());
 
             let c = res.unwrap();
-            let res = c.close();
+            let res = c.close().await;
             assert!(res.is_ok());
 
             Ok(())
