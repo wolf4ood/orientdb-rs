@@ -13,7 +13,9 @@ use futures::channel::mpsc;
 use futures::channel::oneshot;
 
 use crate::common::protocol::messages::request::HandShake;
-use crate::common::protocol::messages::{response::Status, Request, Response,response::LiveQueryResult};
+use crate::common::protocol::messages::{
+    response::LiveQueryResult, response::Status, Request, Response,
+};
 use crate::sync::protocol::WiredProtocol;
 use crate::{OrientError, OrientResult};
 
@@ -110,11 +112,11 @@ fn responder_loop(
 
             let result = match response {
                 Ok(mut r) => match r.header.status {
-                    Status::PUSH =>  {
-                        let live_result : LiveQueryResult = r.payload::<LiveQueryResult>();
+                    Status::PUSH => {
+                        let live_result: LiveQueryResult = r.payload::<LiveQueryResult>();
                         live_manager.fire_event(live_result).await.unwrap();
                         None
-                    },
+                    }
                     _ => Some(Ok(r)),
                 },
                 Err(e) => Some(Err(e)),
@@ -131,7 +133,6 @@ fn responder_loop(
                     None => {}
                 }
             }
-            
         }
     });
 }

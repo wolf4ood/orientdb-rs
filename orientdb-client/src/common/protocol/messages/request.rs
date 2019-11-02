@@ -123,6 +123,28 @@ impl From<LiveQuery> for Request {
         Request::LiveQuery(input)
     }
 }
+
+#[derive(Debug)]
+pub struct UnsubscribeLiveQuery {
+    pub session_id: i32,
+    pub token: Option<Vec<u8>>,
+    pub monitor_id: i32,
+}
+
+impl UnsubscribeLiveQuery {
+    pub fn new(session_id: i32, token: Option<Vec<u8>>, monitor_id: i32) -> UnsubscribeLiveQuery {
+        UnsubscribeLiveQuery {
+            session_id,
+            token,
+            monitor_id,
+        }
+    }
+}
+impl From<UnsubscribeLiveQuery> for Request {
+    fn from(input: UnsubscribeLiveQuery) -> Request {
+        Request::UnsubscribeLiveQuery(input)
+    }
+}
 // Query Message
 #[derive(Debug)]
 pub struct Query {
@@ -335,6 +357,7 @@ pub enum Request {
     Open(Open),
     Query(Query),
     LiveQuery(LiveQuery),
+    UnsubscribeLiveQuery(UnsubscribeLiveQuery),
     QueryNext(QueryNext),
     QueryClose(QueryClose),
     Close(Close),

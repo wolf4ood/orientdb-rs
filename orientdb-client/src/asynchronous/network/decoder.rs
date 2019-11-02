@@ -97,7 +97,8 @@ impl VersionedDecoder for Protocol37 {
     async fn decode_live_query_result(
         buf: &mut BufReader<&TcpStream>,
     ) -> OrientResult<LiveQueryResult> {
-        let push_type = reader::read_i8(buf).await?;
+        // handle only live query for now
+        let _push_type = reader::read_i8(buf).await?;
 
         let monitor_id = reader::read_i32(buf).await?;
 
@@ -106,7 +107,7 @@ impl VersionedDecoder for Protocol37 {
         let n_of_events = reader::read_i32(buf).await?;
 
         let mut events = vec![];
-        for _ in (0..n_of_events) {
+        for _ in 0..n_of_events {
             let e_type = reader::read_i8(buf).await?;
 
             let event = match e_type {
@@ -133,7 +134,7 @@ impl VersionedDecoder for Protocol37 {
             events.push(event);
         }
 
-        Ok(LiveQueryResult::new(monitor_id, events))
+        Ok(LiveQueryResult::new(monitor_id, status == 2, events))
     }
     async fn decode_query(buf: &mut BufReader<&TcpStream>) -> OrientResult<Query> {
         let query_id = reader::read_string(buf).await?;
