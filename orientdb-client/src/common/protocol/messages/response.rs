@@ -1,4 +1,4 @@
-use crate::asynchronous::live::LiveResult;
+use crate::common::types::live::LiveResult;
 use crate::common::types::result::OResult;
 use std::collections::HashMap;
 use std::collections::VecDeque;

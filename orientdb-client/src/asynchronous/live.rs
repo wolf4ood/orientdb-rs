@@ -1,22 +1,15 @@
 use super::network::cluster::Server;
-use crate::types::OResult;
 use async_std::sync::Mutex;
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::common::protocol::messages::request::UnsubscribeLiveQuery;
 use crate::common::protocol::messages::response::LiveQueryResult;
+use crate::types::LiveResult;
 
 use crate::OrientResult;
 
 use async_std::sync::Sender;
-
-#[derive(Debug)]
-pub enum LiveResult {
-    Created(OResult),
-    Updated((OResult, OResult)),
-    Deleted(OResult),
-}
 
 pub struct Unsubscriber {
     monitor_id: i32,

@@ -11,10 +11,11 @@ use async_trait::async_trait;
 use std::convert::From;
 use std::sync::Arc;
 
-use super::live::{LiveResult, Unsubscriber};
+use super::live::Unsubscriber;
 use super::types::resultset::PagedResultSet;
 use crate::asynchronous::c3p0::{C3p0Error, C3p0Result};
 use crate::common::types::OResult;
+use crate::types::LiveResult;
 use futures::Stream;
 use std::collections::HashMap;
 

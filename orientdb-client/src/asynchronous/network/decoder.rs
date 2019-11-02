@@ -12,7 +12,7 @@ use async_trait::async_trait;
 
 use super::reader;
 
-use crate::asynchronous::live::LiveResult;
+use crate::types::LiveResult;
 
 use crate::common::protocol::messages::response::{
     Connect, CreateDB, DropDB, ExistDB, Header, LiveQuery, LiveQueryResult, Open, Query, QueryClose,

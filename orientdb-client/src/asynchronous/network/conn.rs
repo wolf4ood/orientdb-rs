@@ -17,9 +17,10 @@ use crate::common::protocol::messages::{
 use crate::sync::protocol::WiredProtocol;
 use crate::{OrientError, OrientResult};
 
-use super::super::live::{LiveQueryManager, LiveResult};
+use super::super::live::LiveQueryManager;
 use super::decoder::decode;
 use super::reader;
+use crate::types::LiveResult;
 
 pub type ChannelMsg = Cmd;
 
