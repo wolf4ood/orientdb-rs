@@ -77,12 +77,17 @@ impl From<Connect> for ResponseType {
 #[derive(Debug)]
 pub struct LiveQueryResult {
     pub monitor_id: i32,
+    pub ended: bool,
     pub events: Vec<LiveResult>,
 }
 
 impl LiveQueryResult {
-    pub fn new(monitor_id: i32, events: Vec<LiveResult>) -> LiveQueryResult {
-        LiveQueryResult { monitor_id, events }
+    pub fn new(monitor_id: i32, ended: bool, events: Vec<LiveResult>) -> LiveQueryResult {
+        LiveQueryResult {
+            monitor_id,
+            ended,
+            events,
+        }
     }
 }
 

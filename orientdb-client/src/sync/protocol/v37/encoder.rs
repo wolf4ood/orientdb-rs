@@ -2,7 +2,7 @@ use super::super::v37::Protocol37;
 use crate::common::protocol::buffer::OBuffer;
 use crate::common::protocol::messages::request::{
     Close, Connect, CreateDB, DropDB, ExistDB, HandShake, LiveQuery, Open, Query, QueryClose,
-    QueryNext,
+    QueryNext, UnsubscribeLiveQuery,
 };
 use crate::common::protocol::serializer::DocumentSerializer;
 use crate::common::types::document::ODocument;
@@ -85,6 +85,22 @@ impl VersionedEncoder for Protocol37 {
         buf.write_str(drop.db_mode.as_str())?;
         Ok(())
     }
+
+    fn encode_unsubscribe_live_query(
+        buf: &mut OBuffer,
+        query: UnsubscribeLiveQuery,
+    ) -> OrientResult<()> {
+        buf.put_i8(101)?;
+        buf.put_i32(query.session_id)?;
+        if let Some(t) = query.token {
+            buf.write_slice(&t)?;
+        }
+        buf.put_i8(2)?;
+        buf.put_i32(query.monitor_id)?;
+
+        Ok(())
+    }
+
     fn encode_live_query(buf: &mut OBuffer, query: LiveQuery) -> OrientResult<()> {
         buf.put_i8(100)?;
         buf.put_i32(query.session_id)?;

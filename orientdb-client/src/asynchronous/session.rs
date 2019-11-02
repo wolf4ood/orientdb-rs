@@ -160,7 +160,12 @@ impl OSession {
 
         conn.register_handler(q.monitor_id, sender).await?;
 
-        let unsubscriber = Unsubscriber::new(q.monitor_id, self.server.clone());
+        let unsubscriber = Unsubscriber::new(
+            q.monitor_id,
+            self.session_id,
+            self.token.clone(),
+            self.server.clone(),
+        );
 
         Ok((unsubscriber, receiver))
     }

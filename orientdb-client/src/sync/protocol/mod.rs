@@ -62,6 +62,9 @@ impl WiredProtocol {
             Request::LiveQuery(query) => T::encode_live_query(&mut buffer, query),
             Request::QueryNext(next) => T::encode_query_next(&mut buffer, next),
             Request::QueryClose(query_close) => T::encode_query_close(&mut buffer, query_close),
+            Request::UnsubscribeLiveQuery(unsubscribe) => {
+                T::encode_unsubscribe_live_query(&mut buffer, unsubscribe)
+            }
         }?;
 
         Ok(buffer)

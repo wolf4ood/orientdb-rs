@@ -30,6 +30,7 @@ impl DocumentDeserializer for Protocol37 {
     fn decode_projection(input: &[u8]) -> OrientResult<Projection> {
         let (rm, projection) = parse_projection(input)
             .map_err(|e| OrientError::Decoder(format!("Error decoding projection: {:?}", e)))?;
+
         assert_eq!(rm.len(), 0);
         Ok(projection)
     }
@@ -62,7 +63,16 @@ fn parse_projection(input: &[u8]) -> IResult<&[u8], Projection> {
         projection.insert(field, value);
         remaining = rm;
     }
-    let (remaining, _m_fields) = try_parse!(remaining, parse_varint);
+    let (mut remaining, m_fields) = try_parse!(remaining, parse_varint);
+
+    // metadata
+    for _ in 0..m_fields {
+        let (rm, (_field, _value)) = parse_field(remaining, &|e| {
+            let (remaining, value) = try_parse!(e, parse_projection);
+            Ok((remaining, OValue::EmbeddedMap(value.take_map())))
+        })?;
+        remaining = rm;
+    }
 
     Ok((remaining, projection))
 }
