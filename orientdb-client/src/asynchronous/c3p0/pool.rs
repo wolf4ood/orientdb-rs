@@ -36,19 +36,31 @@ impl<M: ConnectionManger> Deref for PooledConnection<M> {
     type Target = M::Connection;
 
     fn deref(&self) -> &Self::Target {
-        &self.conn.as_ref().unwrap().conn
+        &self
+            .conn
+            .as_ref()
+            .expect("It should contain a connection")
+            .conn
     }
 }
 
 impl<M: ConnectionManger> DerefMut for PooledConnection<M> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.conn.as_mut().unwrap().conn
+        &mut self
+            .conn
+            .as_mut()
+            .expect("It should contain a connection")
+            .conn
     }
 }
 
 impl<M: ConnectionManger> Drop for PooledConnection<M> {
     fn drop(&mut self) {
-        task::block_on(self.pool.push_back(self.conn.take().unwrap())).unwrap();
+        task::block_on(
+            self.pool
+                .push_back(self.conn.take().expect("It should contain a connection")),
+        )
+        .expect("Failed to return the connection to the pool");
     }
 }
 
@@ -163,7 +175,8 @@ impl<M: ConnectionManger> Pool<M> {
 
         match internals.waiting.pop_front() {
             Some(t) => {
-                t.send(conn).unwrap();
+                t.send(conn)
+                    .expect("Failed to send connection to a waiting client");
             }
             None => {
                 internals.conns.push(conn);

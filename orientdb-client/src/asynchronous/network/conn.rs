@@ -46,6 +46,18 @@ impl std::fmt::Debug for Connection {
     }
 }
 
+async fn encode_and_write(
+    stream: &Arc<TcpStream>,
+    protocol: &mut WiredProtocol,
+    request: Request,
+) -> OrientResult<()> {
+    let mut stream = &**stream;
+
+    let buf = protocol.encode(request)?;
+    stream.write_all(buf.as_slice()).await?;
+
+    Ok(())
+}
 fn sender_loop(
     stream: Arc<TcpStream>,
     mut channel: Receiver<ChannelMsg>,
@@ -54,30 +66,45 @@ fn sender_loop(
     shutdown_flag: Arc<AtomicBool>,
 ) {
     task::spawn(async move {
-        let mut stream = &*stream;
         loop {
             match channel.next().await {
                 Some(msg) => match msg {
                     Cmd::Msg(m) => {
                         let mut guard = queue.lock().await;
-                        guard.push_back(m.0);
-                        drop(guard);
-                        let buf = protocol.encode(m.1).unwrap();
-                        stream.write_all(buf.as_slice()).await.unwrap();
+
+                        match encode_and_write(&stream, &mut protocol, m.1).await {
+                            Ok(()) => {
+                                guard.push_back(m.0);
+                                drop(guard);
+                            }
+                            Err(e) => {
+                                drop(guard);
+                                m.0.send(Err(e)).await;
+                            }
+                        }
                     }
                     Cmd::MsgNoResponse(m) => {
-                        let buf = protocol.encode(m.1).unwrap();
-                        stream.write_all(buf.as_slice()).await.unwrap();
-                        m.0.send(Ok(())).await;
+                        match encode_and_write(&stream, &mut protocol, m.1).await {
+                            Ok(()) => {
+                                m.0.send(Ok(())).await;
+                            }
+                            Err(e) => {
+                                m.0.send(Err(e)).await;
+                            }
+                        }
                     }
                     Cmd::Shutdown => {
                         shutdown_flag.store(true, Ordering::SeqCst);
-                        stream.shutdown(Shutdown::Both).unwrap();
+                        stream
+                            .shutdown(Shutdown::Both)
+                            .expect("Failed to shutdown the socket");
                     }
                 },
                 None => {
                     shutdown_flag.store(true, Ordering::SeqCst);
-                    stream.shutdown(Shutdown::Both).unwrap();
+                    stream
+                        .shutdown(Shutdown::Both)
+                        .expect("Failed to shutdown the socket");
                     break;
                 }
             }
@@ -115,7 +142,10 @@ fn responder_loop(
                 Ok(mut r) => match r.header.status {
                     Status::PUSH => {
                         let live_result: LiveQueryResult = r.payload::<LiveQueryResult>();
-                        live_manager.fire_event(live_result).await.unwrap();
+                        match live_manager.fire_event(live_result).await {
+                            Ok(_) => {}
+                            Err(_e) => {}
+                        }
                         None
                     }
                     _ => Some(Ok(r)),
@@ -193,7 +223,10 @@ impl Connection {
             .send(Cmd::MsgNoResponse((sender, request)))
             .await;
 
-        let result = receiver.recv().await.unwrap();
+        let result = receiver
+            .recv()
+            .await
+            .expect("It should contain the response");
 
         return result;
     }
@@ -211,7 +244,10 @@ impl Connection {
     pub async fn send(&mut self, request: Request) -> OrientResult<Response> {
         let (sender, receiver) = channel(1);
         self.sender.send(Cmd::Msg((sender, request))).await;
-        receiver.recv().await.unwrap()
+        receiver
+            .recv()
+            .await
+            .expect("It should contain the response")
     }
 
     pub async fn close(self) -> OrientResult<()> {
