@@ -417,8 +417,11 @@ mod asynchronous {
 
             let session = pool.get().await.unwrap();
 
-            let (unsubscriber, mut stream) =
-                session.live_query("live select from V").await.unwrap();
+            let (unsubscriber, mut stream) = session
+                .live_query("live select from V")
+                .run()
+                .await
+                .unwrap();
 
             let inner_session = pool.get().await.unwrap();
             task::spawn(async move {

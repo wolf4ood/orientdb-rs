@@ -2,6 +2,7 @@ use super::network::cluster::{Cluster, Server};
 
 use super::c3p0::{ConnectionManger, Pool, PooledConnection};
 use super::client::OrientDBClientInternal;
+use super::live_statement::LiveStatement;
 use super::statement::Statement;
 use crate::common::protocol::messages::request::{Close, LiveQuery, Query};
 use crate::common::protocol::messages::response;
@@ -17,7 +18,6 @@ use crate::asynchronous::c3p0::{C3p0Error, C3p0Result};
 use crate::common::types::OResult;
 use crate::types::LiveResult;
 use futures::Stream;
-use std::collections::HashMap;
 
 use async_std::sync::channel;
 
@@ -137,27 +137,19 @@ impl OSession {
         }
     }
 
-    pub async fn live_query<T: Into<String>>(
+    pub fn live_query<'a, T: Into<String>>(&'a self, query: T) -> LiveStatement<'a> {
+        LiveStatement::new(self, query.into())
+    }
+
+    pub(crate) async fn live_run(
         &self,
-        query: T,
+        live_query: LiveQuery,
     ) -> OrientResult<(Unsubscriber, impl Stream<Item = OrientResult<LiveResult>>)> {
         let mut conn = self.server.connection().await?;
 
         let (sender, receiver) = channel(10);
 
-        let q: response::LiveQuery = conn
-            .send(
-                LiveQuery::new(
-                    self.session_id,
-                    self.token.clone(),
-                    query.into(),
-                    HashMap::new(),
-                    true,
-                )
-                .into(),
-            )
-            .await?
-            .payload();
+        let q: response::LiveQuery = conn.send(live_query.into()).await?.payload();
 
         conn.register_handler(q.monitor_id, sender).await?;
 
@@ -170,7 +162,6 @@ impl OSession {
 
         Ok((unsubscriber, receiver))
     }
-
     pub(crate) async fn run(
         &self,
         query: Query,
