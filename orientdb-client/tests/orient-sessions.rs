@@ -38,7 +38,8 @@ mod asynchronous {
     use super::common::asynchronous::{connect, create_database};
     use super::config;
 
-    use async_std::task::block_on;
+    use async_std::task::{self, block_on};
+    use std::time::Duration;
 
     #[test]
     fn test_open_sessions() {
@@ -64,11 +65,18 @@ mod asynchronous {
 
             let session = pool.get().await.unwrap();
 
-            assert_eq!(19, pool.idle().await);
+            assert_eq!(1, pool.used().await);
 
             drop(session);
 
-            assert_eq!(20, pool.idle().await);
+            task::spawn_blocking(move || {
+                std::thread::sleep(Duration::from_millis(200));
+            })
+            .await;
+
+            assert_eq!(0, pool.used().await);
+
+            assert_eq!(1, pool.idle().await);
         })
     }
 }

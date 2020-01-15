@@ -36,6 +36,9 @@ nom = "5.0.0"
 async-std =  { version = "0.99.11", optional = true, features = ["unstable"] }
 async-trait = { version = "0.1.10", optional = true }
 futures-preview =  { version="0.3.0-alpha.18", optional=true }
+mobc = {version = "0.5.1", optional = true, features = ["async-std","unstable"] }
+
+
 
 
 

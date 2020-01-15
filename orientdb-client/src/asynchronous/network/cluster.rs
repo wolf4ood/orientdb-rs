@@ -1,14 +1,12 @@
 use super::conn::Connection;
 
-use super::super::c3p0::{ConnectionManger, Pool, PooledConnection};
-
-use crate::asynchronous::c3p0::{C3p0Error, C3p0Result};
 use crate::{OrientError, OrientResult};
 use async_trait::async_trait;
+use mobc::{Connection as PooledConnection, Manager, Pool};
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-pub type SyncConnection = PooledConnection<ServerConnectionManager>;
+pub type AsyncConnection = PooledConnection<ServerConnectionManager>;
 
 #[derive(Debug)]
 pub struct Cluster {
@@ -20,7 +18,7 @@ impl Cluster {
         ClusterBuilder::default()
     }
 
-    pub(crate) async fn connection(&self) -> OrientResult<(SyncConnection, Arc<Server>)> {
+    pub(crate) async fn connection(&self) -> OrientResult<(AsyncConnection, Arc<Server>)> {
         let conn = self.servers[0]
             .connection()
             .await
@@ -72,19 +70,20 @@ impl Default for ClusterBuilder {
     }
 }
 
-#[derive(Debug)]
 pub struct Server {
     pool: Pool<ServerConnectionManager>,
+}
+
+impl std::fmt::Debug for Server {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+        fmt.debug_struct("Server").finish()
+    }
 }
 
 impl Server {
     async fn connect(address: SocketAddr, pool_max: u32) -> OrientResult<Server> {
         let manager = ServerConnectionManager { address };
-        let pool = Pool::builder()
-            .max_size(pool_max)
-            .build(manager)
-            .await
-            .map_err(OrientError::from)?;
+        let pool = Pool::builder().max_open(pool_max as u64).build(manager);
 
         Ok(Server { pool })
     }
@@ -102,12 +101,15 @@ pub struct ServerConnectionManager {
 }
 
 #[async_trait]
-impl ConnectionManger for ServerConnectionManager {
+impl Manager for ServerConnectionManager {
     type Connection = Connection;
+    type Error = OrientError;
 
-    async fn connect(&self) -> C3p0Result<Connection> {
-        Connection::connect(&self.address)
-            .await
-            .map_err(|e| C3p0Error::User(Box::new(e)))
+    async fn connect(&self) -> Result<Connection, OrientError> {
+        Connection::connect(&self.address).await
+    }
+
+    async fn check(&self, conn: Self::Connection) -> Result<Self::Connection, Self::Error> {
+        Ok(conn)
     }
 }

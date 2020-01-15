@@ -11,8 +11,15 @@ fn main() -> OrientResult<()> {
         let (unsubscriber, mut stream) = session.live_query("select from V").run().await?;
 
         task::spawn(async move {
-            session.command("insert into V set id = 1").run().await;
-            unsubscriber.unsubscribe().await;
+            let _ = session
+                .command("insert into V set id = 1")
+                .run()
+                .await
+                .expect("Failed to run the query");
+            unsubscriber
+                .unsubscribe()
+                .await
+                .expect("Failed to unsbubscrbe the live query");
         });
 
         while let Some(item) = stream.next().await {

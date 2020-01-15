@@ -1,4 +1,3 @@
-pub mod c3p0;
 pub mod client;
 pub mod live;
 pub mod live_statement;

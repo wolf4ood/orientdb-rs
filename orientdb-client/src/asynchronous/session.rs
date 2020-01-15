@@ -1,6 +1,5 @@
 use super::network::cluster::{Cluster, Server};
 
-use super::c3p0::{ConnectionManger, Pool, PooledConnection};
 use super::client::OrientDBClientInternal;
 use super::live_statement::LiveStatement;
 use super::statement::Statement;
@@ -8,13 +7,12 @@ use crate::common::protocol::messages::request::{Close, LiveQuery, Query};
 use crate::common::protocol::messages::response;
 use crate::{OrientError, OrientResult};
 use async_std::future::Future;
-use async_trait::async_trait;
+use mobc::{async_trait, Connection, Manager, Pool};
 use std::convert::From;
 use std::sync::Arc;
 
 use super::live::Unsubscriber;
 use super::types::resultset::PagedResultSet;
-use crate::asynchronous::c3p0::{C3p0Error, C3p0Result};
 use crate::common::types::OResult;
 use crate::types::LiveResult;
 use futures::Stream;
@@ -222,26 +220,25 @@ impl SessionPoolManager {
         }
     }
 
-    pub(crate) async fn managed(
+    pub(crate) fn managed(
         self,
-        min_size: Option<u32>,
+        _min_size: Option<u32>,
         max_size: Option<u32>,
     ) -> OrientResult<SessionPool> {
         let pool = Pool::builder()
-            .max_size(max_size.unwrap_or(20))
-            .min_size(min_size.and(max_size).unwrap_or(20))
-            .build(self)
-            .await?;
+            .max_open(max_size.unwrap_or(20) as u64)
+            .build(self);
 
         Ok(SessionPool(pool))
     }
 }
 
 #[async_trait]
-impl ConnectionManger for SessionPoolManager {
+impl Manager for SessionPoolManager {
     type Connection = OSession;
+    type Error = OrientError;
 
-    async fn connect(&self) -> C3p0Result<OSession> {
+    async fn connect(&self) -> Result<Self::Connection, Self::Error> {
         self.client
             ._server_session(
                 self.server.clone(),
@@ -251,24 +248,46 @@ impl ConnectionManger for SessionPoolManager {
                 true,
             )
             .await
-            .map_err(|e| C3p0Error::User(Box::new(e)))
+    }
+
+    async fn check(&self, conn: Self::Connection) -> Result<Self::Connection, Self::Error> {
+        Ok(conn)
     }
 }
 
 #[derive(Clone)]
 pub struct SessionPool(Pool<SessionPoolManager>);
 
-pub type SessionPooled = PooledConnection<SessionPoolManager>;
+pub type SessionPooled = Connection<SessionPoolManager>;
 
 impl SessionPool {
     pub async fn get(&self) -> OrientResult<SessionPooled> {
         self.0.get().await.map_err(OrientError::from)
     }
 
-    pub async fn size(&self) -> u32 {
+    pub async fn max(&self) -> u64 {
+        self.0.state().await.max_open
+    }
+
+    pub async fn size(&self) -> u64 {
         self.0.state().await.connections
     }
-    pub async fn idle(&self) -> u32 {
-        self.0.state().await.idle_connections
+
+    pub async fn idle(&self) -> u64 {
+        self.0.state().await.idle
+    }
+
+    pub async fn used(&self) -> u64 {
+        self.0.state().await.in_use
+    }
+}
+
+impl From<mobc::Error<OrientError>> for OrientError {
+    fn from(e: mobc::Error<OrientError>) -> OrientError {
+        match e {
+            mobc::Error::Inner(e) => e,
+            mobc::Error::BadConn => OrientError::Generic(String::from("Async pool bad connection")),
+            mobc::Error::Timeout => OrientError::Generic(String::from("Async pool timeout")),
+        }
     }
 }

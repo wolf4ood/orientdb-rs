@@ -1,4 +1,4 @@
-use super::network::cluster::SyncConnection;
+use super::network::cluster::AsyncConnection;
 use super::network::cluster::{Cluster, Server};
 use super::session::{OSession, SessionPool, SessionPoolManager};
 use crate::common::protocol::messages::request::{
@@ -66,7 +66,6 @@ impl OrientDBClientInternal {
         let server = self.cluster.select();
         SessionPoolManager::new(self.clone(), server, db_name, user, password)
             .managed(min_size, max_size)
-            .await
     }
     pub async fn session(
         &self,
@@ -114,8 +113,8 @@ impl OrientDBClientInternal {
 
     async fn run_as_admin<R, W, T>(&self, user: &str, password: &str, work: W) -> OrientResult<R>
     where
-        W: FnOnce(AdminSession, SyncConnection) -> T,
-        T: Future<Output = OrientResult<(SyncConnection, R)>>,
+        W: FnOnce(AdminSession, AsyncConnection) -> T,
+        T: Future<Output = OrientResult<(AsyncConnection, R)>>,
     {
         let pooled = self.cluster.connection().await?;
         let mut conn = pooled.0;

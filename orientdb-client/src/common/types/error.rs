@@ -4,9 +4,6 @@ use std::fmt;
 use std::io;
 use std::string::FromUtf8Error;
 
-#[cfg(feature = "async")]
-use crate::asynchronous::c3p0::C3p0Error;
-
 #[derive(Debug)]
 pub enum OrientError {
     Io(io::Error),
@@ -17,8 +14,7 @@ pub enum OrientError {
     Pool(r2d2::Error),
     Field(String),
     Conversion(String),
-    #[cfg(feature = "async")]
-    C3P0(C3p0Error),
+    Generic(String),
 }
 
 impl From<io::Error> for OrientError {
@@ -30,13 +26,6 @@ impl From<io::Error> for OrientError {
 impl From<FromUtf8Error> for OrientError {
     fn from(err: FromUtf8Error) -> OrientError {
         OrientError::UTF8(err)
-    }
-}
-
-#[cfg(feature = "async")]
-impl From<C3p0Error> for OrientError {
-    fn from(err: C3p0Error) -> OrientError {
-        OrientError::C3P0(err)
     }
 }
 
@@ -57,8 +46,7 @@ impl fmt::Display for OrientError {
             OrientError::Field(ref err) => write!(f, "Field error: {}", err),
             OrientError::Conversion(ref err) => write!(f, "Conversion error: {}", err),
             OrientError::Decoder(ref err) => write!(f, "Conversion error: {}", err),
-            #[cfg(feature = "async")]
-            OrientError::C3P0(ref err) => write!(f, "Async Pool error: {:?}", err),
+            OrientError::Generic(ref err) => write!(f, "Generic error: {}", err),
         }
     }
 }
@@ -74,8 +62,7 @@ impl error::Error for OrientError {
             OrientError::Field(ref err) => err,
             OrientError::Conversion(ref err) => err,
             OrientError::Decoder(ref err) => err,
-            #[cfg(feature = "async")]
-            OrientError::C3P0(ref err) => err.description(),
+            OrientError::Generic(ref err) => err,
         }
     }
 
@@ -89,8 +76,7 @@ impl error::Error for OrientError {
             OrientError::Field(ref _err) => None,
             OrientError::Conversion(ref _err) => None,
             OrientError::Decoder(ref _err) => None,
-            #[cfg(feature = "async")]
-            OrientError::C3P0(ref err) => Some(err),
+            OrientError::Generic(ref _err) => None,
         }
     }
 }
