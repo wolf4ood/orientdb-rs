@@ -103,6 +103,25 @@ impl OSession {
             .language(language.into())
     }
 
+    pub async fn transaction<'session, FN, T, RETURN>(
+        &'session self,
+        retry: u32,
+        f: FN,
+    ) -> OrientResult<T>
+    where
+        RETURN: Future<Output = OrientResult<T>>,
+        FN: Fn(OSessionRetry<'session>) -> RETURN,
+    {
+        self.with_retry(retry, |s| {
+            async {
+                let _ = self.command("begin").run().await?;
+                let results = f(s).await;
+                let _ = self.command("commit");
+                results
+            }
+        })
+        .await
+    }
     pub async fn with_retry<'session, FN, T, RETURN>(
         &'session self,
         mut n: u32,

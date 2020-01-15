@@ -408,6 +408,63 @@ mod asynchronous {
     }
 
     #[test]
+    fn session_query_test_with_retry_transaction() {
+        use async_std::task;
+        use orientdb_client::types::OResult;
+        use std::sync::atomic::{AtomicI64, Ordering};
+        use std::sync::Arc;
+
+        block_on(async {
+            let pool = sessions("async_session_query_test_with_retry_transaction").await;
+
+            let counter = Arc::new(AtomicI64::new(0));
+            let session = pool.get().await.unwrap();
+
+            let _result: Vec<Result<OResult, _>> = session
+                .command("insert into V set id = 1")
+                .run()
+                .await
+                .unwrap()
+                .collect()
+                .await;
+
+            let _result: Vec<Result<OResult, _>> = session
+                .command("insert into V set id = 2")
+                .run()
+                .await
+                .unwrap()
+                .collect()
+                .await;
+
+            drop(session);
+
+            let handles : Vec<_> =(0..10).map(|_| {
+                let cloned = pool.clone();
+                let new_counter = counter.clone();
+                task::spawn( async move {
+                    let s = cloned.get().await.unwrap();
+                    let inner_resut = s.transaction(10,|s| async move {
+                        s.command("create edge from (select from v where id = '1') to (select from v where id = '2')").run().await
+                    }).await;
+
+                    match inner_resut {
+                        Ok(_e) => {
+                            new_counter.fetch_add(1,Ordering::SeqCst);
+                        },
+                        _=> {}
+                    };
+                })
+            }).collect();
+
+            for t in handles {
+                t.await;
+            }
+
+            assert_eq!(10, counter.load(Ordering::SeqCst));
+        })
+    }
+
+    #[test]
     fn live_query_test() {
         use async_std::task;
         use orientdb_client::types::OResult;
