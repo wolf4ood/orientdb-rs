@@ -26,8 +26,8 @@ matrix:
     - rust: nightly
       
 env:
-  - ORIENTDB_VERSION=3.0.23
-  - ORIENTDB_VERSION=3.0.24
+  - ORIENTDB_VERSION=3.0.26
+  - ORIENTDB_VERSION=3.0.27
 
 before_install:
   - rustup component add rustfmt
