@@ -141,21 +141,19 @@ impl OrientDBClientInternal {
         password: &str,
         db_mode: DatabaseType,
     ) -> OrientResult<()> {
-        self.run_as_admin(user, password, move |session, mut conn| {
-            async move {
-                let _open: response::CreateDB = conn
-                    .send(
-                        CreateDB::new(
-                            MsgHeader::new(session.session_id, session.token),
-                            db_name,
-                            db_mode,
-                        )
-                        .into(),
+        self.run_as_admin(user, password, move |session, mut conn| async move {
+            let _open: response::CreateDB = conn
+                .send(
+                    CreateDB::new(
+                        MsgHeader::new(session.session_id, session.token),
+                        db_name,
+                        db_mode,
                     )
-                    .await?
-                    .payload();
-                Ok((conn, ()))
-            }
+                    .into(),
+                )
+                .await?
+                .payload();
+            Ok((conn, ()))
         })
         .await
     }
@@ -167,21 +165,19 @@ impl OrientDBClientInternal {
         password: &str,
         db_type: DatabaseType,
     ) -> OrientResult<bool> {
-        self.run_as_admin(user, password, move |session, mut conn| {
-            async move {
-                let exist: response::ExistDB = conn
-                    .send(
-                        ExistDB::new(
-                            MsgHeader::new(session.session_id, session.token),
-                            db_name,
-                            db_type,
-                        )
-                        .into(),
+        self.run_as_admin(user, password, move |session, mut conn| async move {
+            let exist: response::ExistDB = conn
+                .send(
+                    ExistDB::new(
+                        MsgHeader::new(session.session_id, session.token),
+                        db_name,
+                        db_type,
                     )
-                    .await?
-                    .payload();
-                Ok((conn, exist.exist))
-            }
+                    .into(),
+                )
+                .await?
+                .payload();
+            Ok((conn, exist.exist))
         })
         .await
     }
@@ -193,21 +189,19 @@ impl OrientDBClientInternal {
         password: &str,
         db_type: DatabaseType,
     ) -> OrientResult<()> {
-        self.run_as_admin(user, password, move |session, mut conn| {
-            async move {
-                let _drop: response::DropDB = conn
-                    .send(
-                        DropDB::new(
-                            MsgHeader::new(session.session_id, session.token),
-                            db_name,
-                            db_type,
-                        )
-                        .into(),
+        self.run_as_admin(user, password, move |session, mut conn| async move {
+            let _drop: response::DropDB = conn
+                .send(
+                    DropDB::new(
+                        MsgHeader::new(session.session_id, session.token),
+                        db_name,
+                        db_type,
                     )
-                    .await?
-                    .payload();
-                Ok((conn, ()))
-            }
+                    .into(),
+                )
+                .await?
+                .payload();
+            Ok((conn, ()))
         })
         .await
     }

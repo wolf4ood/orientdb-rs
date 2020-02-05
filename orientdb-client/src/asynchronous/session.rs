@@ -112,13 +112,11 @@ impl OSession {
         RETURN: Future<Output = OrientResult<T>>,
         FN: Fn(OSessionRetry<'session>) -> RETURN,
     {
-        self.with_retry(retry, |s| {
-            async {
-                let _ = self.command("begin").run().await?;
-                let results = f(s).await;
-                let _ = self.command("commit");
-                results
-            }
+        self.with_retry(retry, |s| async {
+            let _ = self.command("begin").run().await?;
+            let results = f(s).await;
+            let _ = self.command("commit");
+            results
         })
         .await
     }
