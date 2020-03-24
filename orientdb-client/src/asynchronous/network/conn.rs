@@ -102,9 +102,11 @@ fn sender_loop(
                 },
                 None => {
                     shutdown_flag.store(true, Ordering::SeqCst);
-                    stream
-                        .shutdown(Shutdown::Both)
-                        .expect("Failed to shutdown the socket");
+
+                    match stream.shutdown(Shutdown::Both) {
+                        Ok(e) => {}
+                        Err(e) => {}
+                    }
                     break;
                 }
             }
