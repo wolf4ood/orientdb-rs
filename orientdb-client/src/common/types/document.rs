@@ -181,7 +181,6 @@ mod tests {
     use crate::common::types::document::ODocument;
     use crate::common::types::value::OValue;
     use crate::common::OrientResult;
-    use std::error::Error;
 
     #[test]
     fn doc_simple_test() {
@@ -212,8 +211,8 @@ mod tests {
         assert!(checked.is_err());
 
         assert_eq!(
-            format!("Field confirmed1 not found."),
-            checked.err().unwrap().description()
+            format!("Field error: Field confirmed1 not found."),
+            checked.err().unwrap().to_string()
         );
 
         // Unchecked

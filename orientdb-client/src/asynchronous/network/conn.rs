@@ -104,8 +104,8 @@ fn sender_loop(
                     shutdown_flag.store(true, Ordering::SeqCst);
 
                     match stream.shutdown(Shutdown::Both) {
-                        Ok(e) => {}
-                        Err(e) => {}
+                        Ok(_e) => {}
+                        Err(_e) => {}
                     }
                     break;
                 }
