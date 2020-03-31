@@ -5,7 +5,6 @@ use common::config;
 use orientdb_client::common::protocol::messages::request::Open;
 use orientdb_client::sync::network::conn::Connection;
 
-
 #[test]
 fn test_connection_connect_close() {
     let config = config();
@@ -47,7 +46,10 @@ fn test_connection_send_open_wrong_db() {
     );
     assert!(res.is_err());
     let err = res.unwrap_err();
-    assert_eq!("Request error: Cannot open database \'wrong_database\'", err.to_string());
+    assert_eq!(
+        "Request error: Cannot open database \'wrong_database\'",
+        err.to_string()
+    );
 }
 
 #[cfg(feature = "async")]
@@ -113,7 +115,10 @@ mod asynchronous {
 
             assert!(res.is_err());
             let err = res.unwrap_err();
-            assert_eq!("Request error: Cannot open database \'wrong_database\'", err.to_string());
+            assert_eq!(
+                "Request error: Cannot open database \'wrong_database\'",
+                err.to_string()
+            );
             Ok(())
         })
     }
