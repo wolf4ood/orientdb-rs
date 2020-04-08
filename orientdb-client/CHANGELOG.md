@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Fixed
+
+## [0.3.0] - 2020-04-08
+
+### Added
+
 - [#3](https://github.com/wolf4ood/orientdb-rs/issues/3) Integrated thiserror for error handling
 
 ### Fixed
