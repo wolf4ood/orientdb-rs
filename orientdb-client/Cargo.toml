@@ -18,7 +18,7 @@ readme = "README.md"
 default = []
 
 
-async = ["async-std","async-trait","futures"]
+async = ["async-std","async-trait","futures","mobc"]
 
 
 [badges]
