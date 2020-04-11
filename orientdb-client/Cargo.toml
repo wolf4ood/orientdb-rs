@@ -61,17 +61,25 @@ dotenv = "0.14.1"
 name="async-simple"
 path="examples/async-simple.rs"
 
-required-features = ["async","async-std-runtime"]
+required-features = ["async-std-runtime"]
 
 [[example]]
 
 name="async-pooled-sessions"
 path="examples/async-pooled-sessions.rs"
-required-features = ["async","async-std-runtime"]
+required-features = ["async-std-runtime"]
 
 
 [[example]]
 
 name="async-live-query"
 path="examples/async-live-query.rs"
-required-features = ["async","async-std-runtime"]
+required-features = ["async-std-runtime"]
+
+
+[[example]]
+
+name="async-tokio-simple"
+path="examples/async-tokio-simple.rs"
+
+required-features = ["tokio-runtime"]

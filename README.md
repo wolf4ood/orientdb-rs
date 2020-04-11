@@ -14,7 +14,7 @@
 ## OrientDB Client
 
 
-A Rust Client for OrientDB.
+A Rust Client for OrientDB. Supports sync and async (tokio and async-std)
 
 
 ### Installation
@@ -56,6 +56,12 @@ fn main() -> Result<(), Box<std::error::Error>> {
 #### Basic Usage Asynchronous
 
 
+For [async-std](https://async.rs/)
+
+activate the feature `async-std-runtime`
+
+`orientdb-client = { version = "*", features = ["async-std-runtime"] }`
+
 ```rust
 use async_std::task::block_on;
 use futures::StreamExt;
@@ -76,6 +82,35 @@ fn main() -> OrientResult<()> {
 
         Ok(())
     })
+}
+```
+
+
+For [tokio](https://tokio.rs/)
+
+activate the feature `tokio-runtime`
+
+`orientdb-client = { version = "*", features = ["tokio-runtime"] }`
+
+
+```rust
+use futures::StreamExt;
+use orientdb_client::aio::OrientDB;
+use orientdb_client::OrientResult;
+
+#[tokio::main]
+async fn main() -> OrientResult<()> {
+    let client = OrientDB::connect(("localhost", 2424)).await?;
+
+    let session = client.session("demodb", "admin", "admin").await?;
+
+    let mut stream = session.query("select from V limit 10").run().await?;
+
+    while let Some(item) = stream.next().await {
+        println!("Record {:?}", item?);
+    }
+
+    Ok(())
 }
 ```
 
@@ -102,7 +137,7 @@ in order to specify the version of OrientDB
 
 ```
 cd docker-compose
-export ORIENTDB_VERSION=3.0.23
+export ORIENTDB_SERVER=3.0.23
 docker-compose up -d
 cd ..
 cargo test
