@@ -48,6 +48,7 @@ mod asynchronous {
 
     #[cfg_attr(feature = "async-std-runtime", async_std::test)]
     #[cfg_attr(feature = "tokio-runtime", tokio::test)]
+    #[allow(unused_must_use)]
     async fn test_open_sessions() {
         let client = connect().await;
         let config = config();
@@ -74,6 +75,7 @@ mod asynchronous {
 
         drop(session);
 
+        
         task::spawn_blocking(move || {
             std::thread::sleep(Duration::from_millis(200));
         })

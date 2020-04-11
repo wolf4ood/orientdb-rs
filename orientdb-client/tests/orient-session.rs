@@ -344,6 +344,7 @@ mod asynchronous {
 
     #[cfg_attr(feature = "async-std-runtime", async_std::test)]
     #[cfg_attr(feature = "tokio-runtime", tokio::test)]
+    #[allow(unused_must_use)]
     async fn session_query_test_with_retry() {
         #[cfg(feature = "async-std-runtime")]
         use async_std::task;
@@ -405,6 +406,7 @@ mod asynchronous {
 
     #[cfg_attr(feature = "async-std-runtime", async_std::test)]
     #[cfg_attr(feature = "tokio-runtime", tokio::test)]
+    #[allow(unused_must_use)]
     async fn session_query_test_with_retry_transaction() {
         #[cfg(feature = "async-std-runtime")]
         use async_std::task;
