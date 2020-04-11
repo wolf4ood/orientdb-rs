@@ -1,7 +1,7 @@
-use std::net::Shutdown;
 use core::task::Context;
 use core::task::Poll;
 use futures::io;
+use std::net::Shutdown;
 use std::pin::Pin;
 
 use crate::OrientResult;

@@ -6,9 +6,9 @@ use super::statement::Statement;
 use crate::common::protocol::messages::request::{Close, LiveQuery, Query};
 use crate::common::protocol::messages::response;
 use crate::{OrientError, OrientResult};
-use std::future::Future;
 use mobc::{async_trait, Connection, Manager, Pool};
 use std::convert::From;
+use std::future::Future;
 use std::sync::Arc;
 
 use super::live::Unsubscriber;
