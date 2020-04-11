@@ -60,7 +60,6 @@ mod asynchronous {
     use orientdb_client::asynchronous::network::Connection;
     use orientdb_client::common::protocol::messages::request::Open;
     use orientdb_client::OrientResult;
-    use std::error::Error;
 
     #[cfg_attr(feature = "async-std-runtime", async_std::test)]
     #[cfg_attr(feature = "tokio-runtime", tokio::test)]
