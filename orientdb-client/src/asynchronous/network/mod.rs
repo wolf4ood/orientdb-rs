@@ -3,3 +3,4 @@ mod decoder;
 pub use conn::Connection;
 pub mod cluster;
 mod reader;
+mod stream;

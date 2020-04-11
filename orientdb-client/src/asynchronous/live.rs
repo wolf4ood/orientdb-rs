@@ -1,5 +1,24 @@
 use super::network::cluster::Server;
-use async_std::sync::Mutex;
+
+#[cfg(feature = "async-std-runtime")]
+mod async_std_use {
+    pub use async_std::sync::{Mutex};
+}
+#[cfg(feature = "async-std-runtime")]
+use async_std_use::*;
+
+#[cfg(feature = "tokio-runtime")]
+mod tokio_use {
+    // pub use tokio::sync::mpsc::Sender;
+    pub use tokio::sync::Mutex;
+}
+
+use futures::channel::mpsc::Sender;
+use futures::sink::SinkExt;
+
+#[cfg(feature = "tokio-runtime")]
+pub use tokio_use::*;
+
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -8,8 +27,6 @@ use crate::common::protocol::messages::response::LiveQueryResult;
 use crate::types::LiveResult;
 
 use crate::OrientResult;
-
-use async_std::sync::Sender;
 
 pub struct Unsubscriber {
     monitor_id: i32,
@@ -64,16 +81,16 @@ impl LiveQueryManager {
         let mut guard = self.live_queries.lock().await;
 
         if evt.ended {
-            if let Some(handler) = guard.remove(&evt.monitor_id) {
+            if let Some(mut handler) = guard.remove(&evt.monitor_id) {
                 while let Some(e) = evt.events.pop() {
-                    handler.send(Ok(e)).await;
+                    handler.send(Ok(e)).await?;
                 }
                 drop(handler);
             }
         } else {
-            if let Some(handler) = guard.get(&evt.monitor_id) {
+            if let Some(handler) = guard.get_mut(&evt.monitor_id) {
                 while let Some(e) = evt.events.pop() {
-                    handler.send(Ok(e)).await;
+                    handler.send(Ok(e)).await?;
                 }
             }
         }
