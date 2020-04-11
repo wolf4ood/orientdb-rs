@@ -2,7 +2,7 @@ use super::network::cluster::Server;
 
 #[cfg(feature = "async-std-runtime")]
 mod async_std_use {
-    pub use async_std::sync::{Mutex};
+    pub use async_std::sync::Mutex;
 }
 #[cfg(feature = "async-std-runtime")]
 use async_std_use::*;
