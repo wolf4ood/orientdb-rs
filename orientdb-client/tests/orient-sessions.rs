@@ -75,7 +75,6 @@ mod asynchronous {
 
         drop(session);
 
-        
         task::spawn_blocking(move || {
             std::thread::sleep(Duration::from_millis(200));
         })

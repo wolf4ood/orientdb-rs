@@ -44,8 +44,6 @@ impl PagedResultSet {
         }
     }
 
-
-    
     #[cfg(feature = "async-std-runtime")]
     async fn close_result(&mut self) -> OrientResult<()> {
         if self.response.has_next {
