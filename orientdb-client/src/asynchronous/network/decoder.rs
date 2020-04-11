@@ -1,29 +1,25 @@
+use super::reader;
 use crate::common::protocol::deserializer::DocumentDeserializer;
 use crate::common::protocol::messages::response::Response;
 use crate::common::protocol::messages::response::Status;
-
-use crate::sync::protocol::v37::Protocol37 as P37Sync;
-
-use crate::{OrientError, OrientResult};
-use async_std::io::BufReader;
-use async_std::io::Read;
-use async_std::net::TcpStream;
-use async_trait::async_trait;
-
-use super::reader;
-
-use crate::types::LiveResult;
-
 use crate::common::protocol::messages::response::{
     Connect, CreateDB, DropDB, ExistDB, Header, LiveQuery, LiveQueryResult, Open, Query, QueryClose,
 };
 use crate::common::types::error::{OError, RequestError};
 use crate::common::types::OResult;
+use crate::sync::protocol::v37::Protocol37 as P37Sync;
+use crate::types::LiveResult;
+use crate::{OrientError, OrientResult};
+use async_trait::async_trait;
+use futures::io::AsyncRead;
 use std::collections::{HashMap, VecDeque};
 
-pub async fn decode(version: i16, buf: &mut BufReader<&TcpStream>) -> OrientResult<Response> {
+pub async fn decode<T>(version: i16, buf: &mut T) -> OrientResult<Response>
+where
+    T: AsyncRead + Unpin + Send,
+{
     if version >= 37 {
-        return decode_with::<Protocol37>(buf).await;
+        return decode_with::<Protocol37, T>(buf).await;
     }
     Err(OrientError::Protocol(format!(
         "Protocol {} not supported",
@@ -35,7 +31,10 @@ struct Protocol37 {}
 
 #[async_trait]
 impl VersionedDecoder for Protocol37 {
-    async fn decode_header(buf: &mut BufReader<&TcpStream>) -> OrientResult<Header> {
+    async fn decode_header<T>(buf: &mut T) -> OrientResult<Header>
+    where
+        T: AsyncRead + Unpin + Send,
+    {
         let status = reader::read_i8(buf).await?;
 
         if status == 3 {
@@ -59,13 +58,19 @@ impl VersionedDecoder for Protocol37 {
             })
         }
     }
-    async fn decode_open(buf: &mut BufReader<&TcpStream>) -> OrientResult<Open> {
+    async fn decode_open<T>(buf: &mut T) -> OrientResult<Open>
+    where
+        T: AsyncRead + Unpin + Send,
+    {
         let session_id = reader::read_i32(buf).await?;
         let token = reader::read_optional_bytes(buf).await?;
         Ok(Open::new(session_id, token))
     }
 
-    async fn decode_errors(buf: &mut BufReader<&TcpStream>) -> OrientResult<RequestError> {
+    async fn decode_errors<T>(buf: &mut T) -> OrientResult<RequestError>
+    where
+        T: AsyncRead + Unpin + Send,
+    {
         let code = reader::read_i32(buf).await?;
         let identifier = reader::read_i32(buf).await?;
         let mut errors = vec![];
@@ -89,14 +94,18 @@ impl VersionedDecoder for Protocol37 {
             serialized: _serialized_exception,
         })
     }
-    async fn decode_live_query(buf: &mut BufReader<&TcpStream>) -> OrientResult<LiveQuery> {
+    async fn decode_live_query<T>(buf: &mut T) -> OrientResult<LiveQuery>
+    where
+        T: AsyncRead + Unpin + Send,
+    {
         let monitor_id = reader::read_i32(buf).await?;
 
         Ok(LiveQuery { monitor_id })
     }
-    async fn decode_live_query_result(
-        buf: &mut BufReader<&TcpStream>,
-    ) -> OrientResult<LiveQueryResult> {
+    async fn decode_live_query_result<T>(buf: &mut T) -> OrientResult<LiveQueryResult>
+    where
+        T: AsyncRead + Unpin + Send,
+    {
         // handle only live query for now
         let _push_type = reader::read_i8(buf).await?;
 
@@ -136,7 +145,10 @@ impl VersionedDecoder for Protocol37 {
 
         Ok(LiveQueryResult::new(monitor_id, status == 2, events))
     }
-    async fn decode_query(buf: &mut BufReader<&TcpStream>) -> OrientResult<Query> {
+    async fn decode_query<T>(buf: &mut T) -> OrientResult<Query>
+    where
+        T: AsyncRead + Unpin + Send,
+    {
         let query_id = reader::read_string(buf).await?;
         let changes = reader::read_bool(buf).await?;
         let has_plan = reader::read_bool(buf).await?;
@@ -162,12 +174,18 @@ impl VersionedDecoder for Protocol37 {
             stats,
         ))
     }
-    async fn decode_connect(buf: &mut BufReader<&TcpStream>) -> OrientResult<Connect> {
+    async fn decode_connect<T>(buf: &mut T) -> OrientResult<Connect>
+    where
+        T: AsyncRead + Unpin + Send,
+    {
         let session_id = reader::read_i32(buf).await?;
         let token = reader::read_optional_bytes(buf).await?;
         Ok(Connect::new(session_id, token))
     }
-    async fn decode_exist(buf: &mut BufReader<&TcpStream>) -> OrientResult<ExistDB> {
+    async fn decode_exist<T>(buf: &mut T) -> OrientResult<ExistDB>
+    where
+        T: AsyncRead + Unpin + Send,
+    {
         let exist = reader::read_bool(buf).await?;
         Ok(ExistDB::new(exist))
     }
@@ -175,41 +193,62 @@ impl VersionedDecoder for Protocol37 {
 
 #[async_trait]
 pub trait VersionedDecoder {
-    async fn decode_header(buf: &mut BufReader<&TcpStream>) -> OrientResult<Header>;
+    async fn decode_header<T>(buf: &mut T) -> OrientResult<Header>
+    where
+        T: AsyncRead + Unpin + Send;
 
-    async fn decode_open(buf: &mut BufReader<&TcpStream>) -> OrientResult<Open>;
+    async fn decode_open<T>(buf: &mut T) -> OrientResult<Open>
+    where
+        T: AsyncRead + Unpin + Send;
 
-    async fn decode_errors(buf: &mut BufReader<&TcpStream>) -> OrientResult<RequestError>;
+    async fn decode_errors<T>(buf: &mut T) -> OrientResult<RequestError>
+    where
+        T: AsyncRead + Unpin + Send;
 
-    async fn decode_query(buf: &mut BufReader<&TcpStream>) -> OrientResult<Query>;
+    async fn decode_query<T>(buf: &mut T) -> OrientResult<Query>
+    where
+        T: AsyncRead + Unpin + Send;
 
-    async fn decode_live_query(buf: &mut BufReader<&TcpStream>) -> OrientResult<LiveQuery>;
+    async fn decode_live_query<T>(buf: &mut T) -> OrientResult<LiveQuery>
+    where
+        T: AsyncRead + Unpin + Send;
 
-    async fn decode_live_query_result(
-        buf: &mut BufReader<&TcpStream>,
-    ) -> OrientResult<LiveQueryResult>;
+    async fn decode_live_query_result<T>(buf: &mut T) -> OrientResult<LiveQueryResult>
+    where
+        T: AsyncRead + Unpin + Send;
 
-    async fn decode_connect(buf: &mut BufReader<&TcpStream>) -> OrientResult<Connect>;
+    async fn decode_connect<T>(buf: &mut T) -> OrientResult<Connect>
+    where
+        T: AsyncRead + Unpin + Send;
 
-    async fn decode_exist(buf: &mut BufReader<&TcpStream>) -> OrientResult<ExistDB>;
+    async fn decode_exist<T>(buf: &mut T) -> OrientResult<ExistDB>
+    where
+        T: AsyncRead + Unpin + Send;
 
-    async fn decode_drop_db(_buf: &mut BufReader<&TcpStream>) -> OrientResult<DropDB> {
+    async fn decode_drop_db<T>(_buf: &mut T) -> OrientResult<DropDB>
+    where
+        T: AsyncRead + Unpin + Send,
+    {
         Ok(DropDB {})
     }
-    async fn decode_create_db(_buf: &mut BufReader<&TcpStream>) -> OrientResult<CreateDB> {
+    async fn decode_create_db<T>(_buf: &mut T) -> OrientResult<CreateDB>
+    where
+        T: AsyncRead + Unpin + Send,
+    {
         Ok(CreateDB {})
     }
-    async fn decode_query_close<R: Read>(_buf: &mut R) -> OrientResult<QueryClose>
+    async fn decode_query_close<T>(_buf: &mut T) -> OrientResult<QueryClose>
     where
-        R: std::marker::Send,
+        T: AsyncRead + Unpin + Send,
     {
         Ok(QueryClose {})
     }
 }
 
-pub async fn decode_with<T: VersionedDecoder>(
-    buf: &mut BufReader<&TcpStream>,
-) -> OrientResult<Response> {
+pub async fn decode_with<T: VersionedDecoder, R>(buf: &mut R) -> OrientResult<Response>
+where
+    R: AsyncRead + Unpin + Send,
+{
     let header = T::decode_header(buf).await?;
 
     let payload = match header.status {
@@ -236,7 +275,10 @@ pub async fn decode_with<T: VersionedDecoder>(
     Ok(Response::new(header, payload))
 }
 
-async fn read_result(buf: &mut BufReader<&TcpStream>) -> OrientResult<OResult> {
+async fn read_result<T>(buf: &mut T) -> OrientResult<OResult>
+where
+    T: AsyncRead + Unpin + Send,
+{
     let r_type = reader::read_i8(buf).await?;
     match r_type {
         4 => {
@@ -262,7 +304,10 @@ async fn read_result(buf: &mut BufReader<&TcpStream>) -> OrientResult<OResult> {
     }
 }
 
-async fn read_result_set(buf: &mut BufReader<&TcpStream>) -> OrientResult<VecDeque<OResult>> {
+async fn read_result_set<T>(buf: &mut T) -> OrientResult<VecDeque<OResult>>
+where
+    T: AsyncRead + Unpin + Send,
+{
     let size = reader::read_i32(buf).await?;
     let mut records = VecDeque::new();
     for _ in 0..size {
@@ -273,7 +318,10 @@ async fn read_result_set(buf: &mut BufReader<&TcpStream>) -> OrientResult<VecDeq
     Ok(records)
 }
 
-async fn read_query_stats(buf: &mut BufReader<&TcpStream>) -> OrientResult<HashMap<String, i64>> {
+async fn read_query_stats<T>(buf: &mut T) -> OrientResult<HashMap<String, i64>>
+where
+    T: AsyncRead + Unpin + Send,
+{
     let size = reader::read_i32(buf).await?;
     let stats = HashMap::new();
     for _ in 0..size {}

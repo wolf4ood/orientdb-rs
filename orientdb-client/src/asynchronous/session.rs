@@ -6,7 +6,7 @@ use super::statement::Statement;
 use crate::common::protocol::messages::request::{Close, LiveQuery, Query};
 use crate::common::protocol::messages::response;
 use crate::{OrientError, OrientResult};
-use async_std::future::Future;
+use std::future::Future;
 use mobc::{async_trait, Connection, Manager, Pool};
 use std::convert::From;
 use std::sync::Arc;
@@ -17,7 +17,7 @@ use crate::common::types::OResult;
 use crate::types::LiveResult;
 use futures::Stream;
 
-use async_std::sync::channel;
+use futures::channel::mpsc::channel;
 
 #[derive(Debug)]
 pub struct OSessionRetry<'session>(&'session OSession);

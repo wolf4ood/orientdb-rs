@@ -234,154 +234,151 @@ fn crate_schema(session: &OSession) {
 mod asynchronous {
     use super::common::asynchronous::{session, sessions};
 
-    use async_std::task::block_on;
     use futures::StreamExt;
 
-    #[test]
-    fn test_open_session_close() {
-        block_on(async {
-            let session = session("test_async_open_session_close").await;
-            assert!(session.session_id > 0);
-            match session.token {
-                Some(ref t) => assert!(t.len() > 0),
-                None => assert!(false),
-            }
-            let result = session.close().await;
-            assert!(result.is_ok());
-        })
+    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
+    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
+    async fn test_open_session_close() {
+        let session = session("test_async_open_session_close").await;
+        assert!(session.session_id > 0);
+        match session.token {
+            Some(ref t) => assert!(t.len() > 0),
+            None => assert!(false),
+        }
+        let result = session.close().await;
+        assert!(result.is_ok());
     }
 
-    #[test]
-    fn session_query_test_simple() {
-        block_on(async {
-            let session = session("async_session_query_test_simple").await;
+    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
+    #[cfg_attr(feature = "tokio-runtime", tokio::test(threaded_scheduler))]
+    async fn session_query_test_simple() {
+        let session = session("async_session_query_test_simple").await;
 
-            let mut results = vec![];
-            let mut s = session.query("select from OUser").run().await.unwrap();
+        let mut results = vec![];
+        let mut s = session.query("select from OUser").run().await.unwrap();
 
-            while let Some(v) = s.next().await {
-                results.push(v);
-            }
-        })
+        while let Some(v) = s.next().await {
+            results.push(v);
+        }
     }
 
-    #[test]
-    fn session_query_with_positional_params() {
-        block_on(async {
-            let session = session("async_session_query_with_positional_params").await;
-            let result: Vec<_> = session
-                .query("select from OUser where name = ?")
-                .positional(&[&"admin"])
-                .run()
-                .await
-                .unwrap()
-                .collect()
-                .await;
+    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
+    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
+    async fn session_query_with_positional_params() {
+        let session = session("async_session_query_with_positional_params").await;
+        let result: Vec<_> = session
+            .query("select from OUser where name = ?")
+            .positional(&[&"admin"])
+            .run()
+            .await
+            .unwrap()
+            .collect()
+            .await;
 
-            assert_eq!(1, result.len());
-        })
+        assert_eq!(1, result.len());
     }
 
-    #[test]
-    fn session_query_with_more_positional_params() {
-        block_on(async {
-            let session = session("async_session_query_with_more_positional_params").await;
-            let result: Vec<_> = session
-                .query("select from OUser where name = ? and void = ?")
-                .positional(&[&"admin", &1])
-                .run()
-                .await
-                .unwrap()
-                .collect()
-                .await;
+    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
+    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
+    async fn session_query_with_more_positional_params() {
+        let session = session("async_session_query_with_more_positional_params").await;
+        let result: Vec<_> = session
+            .query("select from OUser where name = ? and void = ?")
+            .positional(&[&"admin", &1])
+            .run()
+            .await
+            .unwrap()
+            .collect()
+            .await;
 
-            assert_eq!(0, result.len());
-        })
+        assert_eq!(0, result.len());
     }
 
-    #[test]
-    fn session_query_with_named_params() {
-        block_on(async {
-            let session = session("async_session_query_with_named_params").await;
-            let result: Vec<_> = session
-                .query("select from OUser where name = :name")
-                .named(&[("name", &"admin")])
-                .run()
-                .await
-                .unwrap()
-                .collect()
-                .await;
+    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
+    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
+    async fn session_query_with_named_params() {
+        let session = session("async_session_query_with_named_params").await;
+        let result: Vec<_> = session
+            .query("select from OUser where name = :name")
+            .named(&[("name", &"admin")])
+            .run()
+            .await
+            .unwrap()
+            .collect()
+            .await;
 
-            assert_eq!(1, result.len());
-        })
+        assert_eq!(1, result.len());
     }
 
-    #[test]
-    fn session_query_with_more_named_params() {
-        block_on(async {
-            let session = session("async_session_query_with_more_named_params").await;
-            let result: Vec<_> = session
-                .query("select from OUser where name = :name and void =:void")
-                .named(&[("name", &"admin"), ("void", &1)])
-                .run()
-                .await
-                .unwrap()
-                .collect()
-                .await;
+    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
+    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
+    async fn session_query_with_more_named_params() {
+        let session = session("async_session_query_with_more_named_params").await;
+        let result: Vec<_> = session
+            .query("select from OUser where name = :name and void =:void")
+            .named(&[("name", &"admin"), ("void", &1)])
+            .run()
+            .await
+            .unwrap()
+            .collect()
+            .await;
 
-            assert_eq!(0, result.len());
-        })
+        assert_eq!(0, result.len());
     }
 
-    #[test]
-    fn session_query_test_with_page_size() {
-        block_on(async {
-            let session = session("async_session_query_test_with_page_size").await;
-            let result: Vec<_> = session
-                .query("select from OUser")
-                .page_size(1)
-                .run()
-                .await
-                .unwrap()
-                .collect()
-                .await;
+    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
+    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
+    async fn session_query_test_with_page_size() {
+        let session = session("async_session_query_test_with_page_size").await;
+        let result: Vec<_> = session
+            .query("select from OUser")
+            .page_size(1)
+            .run()
+            .await
+            .unwrap()
+            .collect()
+            .await;
 
-            assert_eq!(3, result.len());
-        })
+        assert_eq!(3, result.len());
     }
 
-    #[test]
-    fn session_query_test_with_retry() {
+    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
+    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
+    async fn session_query_test_with_retry() {
+        #[cfg(feature = "async-std-runtime")]
         use async_std::task;
+
+        #[cfg(feature = "tokio-runtime")]
+        use tokio::task;
+
         use orientdb_client::types::OResult;
         use std::sync::atomic::{AtomicI64, Ordering};
         use std::sync::Arc;
 
-        block_on(async {
-            let pool = sessions("async_session_query_test_with_retry").await;
+        let pool = sessions("async_session_query_test_with_retry").await;
 
-            let counter = Arc::new(AtomicI64::new(0));
-            let session = pool.get().await.unwrap();
+        let counter = Arc::new(AtomicI64::new(0));
+        let session = pool.get().await.unwrap();
 
-            let _result: Vec<Result<OResult, _>> = session
-                .command("insert into V set id = 1")
-                .run()
-                .await
-                .unwrap()
-                .collect()
-                .await;
+        let _result: Vec<Result<OResult, _>> = session
+            .command("insert into V set id = 1")
+            .run()
+            .await
+            .unwrap()
+            .collect()
+            .await;
 
-            let _result: Vec<Result<OResult, _>> = session
-                .command("insert into V set id = 2")
-                .run()
-                .await
-                .unwrap()
-                .collect()
-                .await;
+        let _result: Vec<Result<OResult, _>> = session
+            .command("insert into V set id = 2")
+            .run()
+            .await
+            .unwrap()
+            .collect()
+            .await;
 
-            drop(session);
+        drop(session);
 
-            let handles : Vec<_> =(0..10).map(|_| {
+        let handles : Vec<_> =(0..10).map(|_| {
                 let cloned = pool.clone();
                 let new_counter = counter.clone();
                 task::spawn( async move {
@@ -399,46 +396,50 @@ mod asynchronous {
                 })
             }).collect();
 
-            for t in handles {
-                t.await;
-            }
+        for t in handles {
+            t.await;
+        }
 
-            assert_eq!(10, counter.load(Ordering::SeqCst));
-        })
+        assert_eq!(10, counter.load(Ordering::SeqCst));
     }
 
-    #[test]
-    fn session_query_test_with_retry_transaction() {
+    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
+    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
+    async fn session_query_test_with_retry_transaction() {
+        #[cfg(feature = "async-std-runtime")]
         use async_std::task;
+
+        #[cfg(feature = "tokio-runtime")]
+        use tokio::task;
+
         use orientdb_client::types::OResult;
         use std::sync::atomic::{AtomicI64, Ordering};
         use std::sync::Arc;
 
-        block_on(async {
-            let pool = sessions("async_session_query_test_with_retry_transaction").await;
+        let pool = sessions("async_session_query_test_with_retry_transaction").await;
 
-            let counter = Arc::new(AtomicI64::new(0));
-            let session = pool.get().await.unwrap();
+        let counter = Arc::new(AtomicI64::new(0));
+        let session = pool.get().await.unwrap();
 
-            let _result: Vec<Result<OResult, _>> = session
-                .command("insert into V set id = 1")
-                .run()
-                .await
-                .unwrap()
-                .collect()
-                .await;
+        let _result: Vec<Result<OResult, _>> = session
+            .command("insert into V set id = 1")
+            .run()
+            .await
+            .unwrap()
+            .collect()
+            .await;
 
-            let _result: Vec<Result<OResult, _>> = session
-                .command("insert into V set id = 2")
-                .run()
-                .await
-                .unwrap()
-                .collect()
-                .await;
+        let _result: Vec<Result<OResult, _>> = session
+            .command("insert into V set id = 2")
+            .run()
+            .await
+            .unwrap()
+            .collect()
+            .await;
 
-            drop(session);
+        drop(session);
 
-            let handles : Vec<_> =(0..10).map(|_| {
+        let handles : Vec<_> =(0..10).map(|_| {
                 let cloned = pool.clone();
                 let new_counter = counter.clone();
                 task::spawn( async move {
@@ -456,64 +457,67 @@ mod asynchronous {
                 })
             }).collect();
 
-            for t in handles {
-                t.await;
-            }
+        for t in handles {
+            t.await;
+        }
 
-            assert_eq!(10, counter.load(Ordering::SeqCst));
-        })
+        assert_eq!(10, counter.load(Ordering::SeqCst));
     }
 
-    #[test]
-    fn live_query_test() {
+    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
+    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
+    async fn live_query_test() {
+        #[cfg(feature = "async-std-runtime")]
         use async_std::task;
+
+        #[cfg(feature = "tokio-runtime")]
+        use tokio::task;
+
         use orientdb_client::types::OResult;
 
-        block_on(async {
-            let pool = sessions("live_query_test").await;
+        let pool = sessions("live_query_test").await;
 
-            let session = pool.get().await.unwrap();
+        let session = pool.get().await.unwrap();
 
-            let (unsubscriber, mut stream) = session
-                .live_query("live select from V")
+        let (unsubscriber, mut stream) = session
+            .live_query("live select from V")
+            .run()
+            .await
+            .unwrap();
+
+        let inner_session = pool.get().await.unwrap();
+        task::spawn(async move {
+            let _result: Vec<Result<OResult, _>> = inner_session
+                .command("insert into v set id = 1")
                 .run()
                 .await
-                .unwrap();
+                .unwrap()
+                .collect()
+                .await;
 
-            let inner_session = pool.get().await.unwrap();
-            task::spawn(async move {
-                let _result: Vec<Result<OResult, _>> = inner_session
-                    .command("insert into v set id = 1")
-                    .run()
-                    .await
-                    .unwrap()
-                    .collect()
-                    .await;
+            let _result: Vec<Result<OResult, _>> = inner_session
+                .command("update v set id = 2 where id = 1")
+                .run()
+                .await
+                .unwrap()
+                .collect()
+                .await;
 
-                let _result: Vec<Result<OResult, _>> = inner_session
-                    .command("update v set id = 2 where id = 1")
-                    .run()
-                    .await
-                    .unwrap()
-                    .collect()
-                    .await;
+            let _result: Vec<Result<OResult, _>> = inner_session
+                .command("delete vertex from V where id = 2")
+                .run()
+                .await
+                .unwrap()
+                .collect()
+                .await;
 
-                let _result: Vec<Result<OResult, _>> = inner_session
-                    .command("delete vertex from V where id = 2")
-                    .run()
-                    .await
-                    .unwrap()
-                    .collect()
-                    .await;
+            unsubscriber.unsubscribe().await.unwrap();
+        });
 
-                unsubscriber.unsubscribe().await.unwrap();
-            });
-
-            let mut counter = 0;
-            while let Some(_item) = stream.next().await {
-                counter += 1;
-            }
-            assert_eq!(3, counter);
-        })
+        let mut counter = 0;
+        while let Some(_item) = stream.next().await {
+            counter += 1;
+        }
+        assert_eq!(3, counter);
     }
 }

@@ -1,5 +1,7 @@
 if [[ $TRAVIS_RUST_VERSION == "stable" ]]; then
-      cargo test --all --tests
+      cargo test --all --features=async-std-runtime
+      cargo test --all --features=tokio-runtime
 elif [[ $TRAVIS_RUST_VERSION == "nightly" ]]; then
-      cargo test --all --all-features
+      cargo test --all --features=async-std-runtime
+      cargo test --all --features=tokio-runtime
 fi

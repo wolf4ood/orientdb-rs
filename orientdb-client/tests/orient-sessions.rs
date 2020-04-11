@@ -38,45 +38,49 @@ mod asynchronous {
     use super::common::asynchronous::{connect, create_database};
     use super::config;
 
-    use async_std::task::{self, block_on};
     use std::time::Duration;
 
-    #[test]
-    fn test_open_sessions() {
-        block_on(async {
-            let client = connect().await;
-            let config = config();
+    #[cfg(feature = "async-std-runtime")]
+    use async_std::task;
 
-            create_database("async_test_open_sessions", &client, &config).await;
+    #[cfg(feature = "tokio-runtime")]
+    use tokio::task;
 
-            let result = client
-                .sessions(
-                    "async_test_open_sessions",
-                    &config.username,
-                    &config.password,
-                    None,
-                    Some(20),
-                )
-                .await;
+    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
+    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
+    async fn test_open_sessions() {
+        let client = connect().await;
+        let config = config();
 
-            assert!(result.is_ok());
+        create_database("async_test_open_sessions", &client, &config).await;
 
-            let pool = result.unwrap();
-
-            let session = pool.get().await.unwrap();
-
-            assert_eq!(1, pool.used().await);
-
-            drop(session);
-
-            task::spawn_blocking(move || {
-                std::thread::sleep(Duration::from_millis(200));
-            })
+        let result = client
+            .sessions(
+                "async_test_open_sessions",
+                &config.username,
+                &config.password,
+                None,
+                Some(20),
+            )
             .await;
 
-            assert_eq!(0, pool.used().await);
+        assert!(result.is_ok());
 
-            assert_eq!(1, pool.idle().await);
+        let pool = result.unwrap();
+
+        let session = pool.get().await.unwrap();
+
+        assert_eq!(1, pool.used().await);
+
+        drop(session);
+
+        task::spawn_blocking(move || {
+            std::thread::sleep(Duration::from_millis(200));
         })
+        .await;
+
+        assert_eq!(0, pool.used().await);
+
+        assert_eq!(1, pool.idle().await);
     }
 }

@@ -25,6 +25,9 @@ pub enum OrientError {
     Conversion(String),
     #[error("Generic error: {0}")]
     Generic(String),
+    #[cfg(feature = "async")]
+    #[error("Channel send error: {0}")]
+    ChannelSend(#[from] futures::channel::mpsc::SendError),
 }
 
 #[derive(Debug, Default)]
