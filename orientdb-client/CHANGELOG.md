@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Fixed
+
+## [0.4.0] - 2020-04-12
+
+### Added
+
 - [#15](https://github.com/wolf4ood/orientdb-rs/issues/15) Added Tokio support
 
 ### Fixed
