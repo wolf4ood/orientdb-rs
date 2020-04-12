@@ -1,6 +1,6 @@
 [package]
 name = "orientdb-client"
-version = "0.3.1"
+version = "0.4.0"
 authors = ["Enrico Risa <enrico.risa@gmail.com>"]
 edition = "2018"
 license = "Apache-2.0"
@@ -10,14 +10,8 @@ keywords = ["database", "graphs","orientdb"]
 categories = ["database"]
 readme = "README.md"
 
-
-
-
 [features]
-
 default = []
-
-
 async = ["async-trait","futures"]
 tokio-runtime = ["async","tokio","mobc/tokio"]
 async-std-runtime=["async","async-std","mobc/async-std"]
@@ -42,44 +36,25 @@ mobc = {version = "0.5.7", optional = true, default-features=false, features = [
 tokio = { version = "0.2", optional=true, features = ["full"] }
 
 
-
-
-
-
-
-
-
-
-
 [dev-dependencies]
 dotenv = "0.14.1"
 
-
-
 [[example]]
-
 name="async-simple"
 path="examples/async-simple.rs"
-
 required-features = ["async-std-runtime"]
 
 [[example]]
-
 name="async-pooled-sessions"
 path="examples/async-pooled-sessions.rs"
 required-features = ["async-std-runtime"]
 
-
 [[example]]
-
 name="async-live-query"
 path="examples/async-live-query.rs"
 required-features = ["async-std-runtime"]
 
-
 [[example]]
-
 name="async-tokio-simple"
 path="examples/async-tokio-simple.rs"
-
 required-features = ["tokio-runtime"]
