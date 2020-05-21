@@ -258,3 +258,15 @@ impl FromOValue for bool {
         }
     }
 }
+
+impl<T: FromOValue> FromOValue for Option<T> {
+    fn from_value(ty: &OValue) -> OrientResult<Self>
+    where
+        Self: Sized,
+    {
+        match ty {
+            OValue::Null => Ok(None),
+            _ => Ok(Some(T::from_value(ty)?)),
+        }
+    }
+}
