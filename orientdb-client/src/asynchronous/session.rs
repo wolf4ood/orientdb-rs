@@ -242,8 +242,10 @@ impl SessionPoolManager {
         _min_size: Option<u32>,
         max_size: Option<u32>,
     ) -> OrientResult<SessionPool> {
+        let size = max_size.unwrap_or(20);
         let pool = Pool::builder()
-            .max_open(max_size.unwrap_or(20) as u64)
+            .max_open(size as u64)
+            .max_idle(size as u64)
             .build(self);
 
         Ok(SessionPool(pool))

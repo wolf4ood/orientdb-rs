@@ -39,6 +39,7 @@ pub mod sync;
 pub mod asynchronous;
 
 pub use common::types::error::OrientError;
+pub use common::ConnectionOptions;
 pub use sync::client::OrientDB;
 pub use sync::session::{OSession, SessionPool};
 

@@ -30,7 +30,7 @@ pub enum OrientError {
     ChannelSend(#[from] futures::channel::mpsc::SendError),
 }
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct RequestError {
     pub session_id: i32,
     pub code: i32,
@@ -88,6 +88,18 @@ impl RequestError {
 }
 
 impl fmt::Display for RequestError {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("RequestError")
+            .field("session_id", &self.session_id)
+            .field("code", &self.code)
+            .field("identifier", &self.identifier)
+            .field("type", &self.errors[0].err_type)
+            .field("message", &self.errors[0].err_msg)
+            .finish()
+    }
+}
+
+impl std::fmt::Debug for RequestError {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("RequestError")
             .field("session_id", &self.session_id)

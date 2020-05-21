@@ -83,7 +83,10 @@ impl std::fmt::Debug for Server {
 impl Server {
     async fn connect(address: SocketAddr, pool_max: u32) -> OrientResult<Server> {
         let manager = ServerConnectionManager { address };
-        let pool = Pool::builder().max_open(pool_max as u64).build(manager);
+        let pool = Pool::builder()
+            .max_open(pool_max as u64)
+            .max_idle(pool_max as u64)
+            .build(manager);
 
         Ok(Server { pool })
     }
