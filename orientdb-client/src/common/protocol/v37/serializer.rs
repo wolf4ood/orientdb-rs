@@ -78,6 +78,11 @@ fn write_value<'a>(buf: &mut OBuffer, owner: &'a str, value: &'a OValue) -> Orie
             }
             Ok(())
         }
+        #[cfg(feature = "uuid")]
+        OValue::Uuid(ref uuid) => {
+            buf.write_string(&uuid.to_string())?;
+            Ok(())
+        }
         _ => panic!("Field {} not supported", owner),
     }?;
     Ok(())

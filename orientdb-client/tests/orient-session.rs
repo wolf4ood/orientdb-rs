@@ -124,6 +124,41 @@ fn session_query_test_with_page_size_and_close() {
     });
 }
 
+#[cfg(feature = "uuid")]
+#[test]
+fn session_query_with_uuid() {
+    use uuid::Uuid;
+
+    run_with_session("session_query_with_uuid", |session| {
+        crate_schema(&session);
+
+        let uuid = Uuid::new_v4();
+        session
+            .command("create vertex Person set gid = ?")
+            .positional(&[&uuid])
+            .run()
+            .unwrap();
+
+        let mut iter = session
+            .query("select from Person")
+            .page_size(1)
+            .run()
+            .unwrap();
+
+        let first = match iter.next() {
+            Some(Ok(elem)) => elem,
+            Some(Err(_)) => panic!("Received error on next"),
+            None => panic!("Nothing returned from ResultSet#next"),
+        };
+
+        assert_eq!(uuid, first.get::<Uuid>("gid"));
+
+        let result = iter.close();
+
+        assert!(result.is_ok());
+    });
+}
+
 #[test]
 fn session_query_with_projection() {
     run_with_session("session_query_with_projection", |session| {
@@ -404,6 +439,38 @@ mod asynchronous {
         assert_eq!(10, counter.load(Ordering::SeqCst));
     }
 
+    #[cfg(feature = "uuid")]
+    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
+    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
+
+    async fn session_query_with_uuid_async() {
+        use uuid::Uuid;
+
+        let session = session("session_query_with_uuid_async").await;
+
+        let uuid = Uuid::new_v4();
+        let _result = session
+            .command("create vertex V set gid = ?")
+            .positional(&[&uuid])
+            .run()
+            .await
+            .unwrap()
+            .next()
+            .await;
+
+        let item = session
+            .query("select from V")
+            .page_size(1)
+            .run()
+            .await
+            .unwrap()
+            .next()
+            .await
+            .unwrap()
+            .unwrap();
+
+        assert_eq!(uuid, item.get::<Uuid>("gid"));
+    }
     #[cfg_attr(feature = "async-std-runtime", async_std::test)]
     #[cfg_attr(feature = "tokio-runtime", tokio::test)]
     #[allow(unused_must_use)]
