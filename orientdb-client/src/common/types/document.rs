@@ -241,4 +241,16 @@ mod tests {
             doc.get_raw("surname")
         );
     }
+
+    #[cfg(feature = "uuid")]
+    #[test]
+    fn uuid_test() {
+        use uuid::Uuid;
+
+        let mut doc = ODocument::new("Test");
+        let uuid = Uuid::new_v4();
+        doc.set("uuid", uuid.clone());
+
+        assert_eq!(Some(&OValue::Uuid(uuid)), doc.get_raw("uuid"));
+    }
 }

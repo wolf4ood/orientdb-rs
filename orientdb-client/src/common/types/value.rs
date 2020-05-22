@@ -8,6 +8,9 @@ use crate::common::types::document::ODocument;
 use crate::common::types::rid::ORecordID;
 use crate::common::{OrientError, OrientResult};
 
+#[cfg(feature = "uuid")]
+use uuid::Uuid;
+
 pub type DateTime = chrono::DateTime<offset::Utc>;
 pub type Date = chrono::Date<offset::Utc>;
 pub type EmbeddedMap = HashMap<String, OValue>;
@@ -47,6 +50,8 @@ pub enum OValue {
     EmbeddedList(EmbeddedList),
     EmbeddedSet(EmbeddedSet),
     RidBag(RidBag),
+    #[cfg(feature = "uuid")]
+    Uuid(Uuid),
 }
 
 impl<'a> From<&'a str> for OValue {
@@ -142,6 +147,12 @@ impl IntoOValue for LinkList {
     }
 }
 
+#[cfg(feature = "uuid")]
+impl IntoOValue for Uuid {
+    fn into_ovalue(&self) -> OValue {
+        OValue::Uuid(self.clone())
+    }
+}
 impl OValue {
     pub fn get_type_id(&self) -> i8 {
         match self {
@@ -157,6 +168,8 @@ impl OValue {
             OValue::EmbeddedList(_) => constants::EMBEDDEDLIST,
             OValue::EmbeddedSet(_) => constants::EMBEDDEDSET,
             OValue::LinkList(_) => constants::LINKLIST,
+            #[cfg(feature = "uuid")]
+            OValue::Uuid(_) => constants::STRING,
 
             _ => panic!("Type id not supported {:?}", self),
         }
@@ -253,6 +266,25 @@ impl FromOValue for bool {
             OValue::Boolean(val) => Ok(*val),
             _ => Err(OrientError::Conversion(format!(
                 "Cannot convert {:?} to &str",
+                ty
+            ))),
+        }
+    }
+}
+
+#[cfg(feature = "uuid")]
+impl FromOValue for Uuid {
+    fn from_value(ty: &OValue) -> OrientResult<Self>
+    where
+        Self: Sized,
+    {
+        match ty {
+            OValue::Uuid(val) => Ok(*val),
+            OValue::String(val) => Ok(Uuid::parse_str(val).map_err(|_e| {
+                OrientError::Conversion(format!("Cannot parse {:?} to Uuid", val))
+            })?),
+            _ => Err(OrientError::Conversion(format!(
+                "Cannot convert {:?} to Uuid",
                 ty
             ))),
         }
