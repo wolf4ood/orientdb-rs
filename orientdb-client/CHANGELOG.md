@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Fixed
+
+## [0.4.1] - 2020-05-24
+
+### Added
+
 - [#17](https://github.com/wolf4ood/orientdb-rs/issues/17) Added Uuid support
 
 ### Fixed
