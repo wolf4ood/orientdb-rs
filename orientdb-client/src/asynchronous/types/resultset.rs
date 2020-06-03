@@ -43,21 +43,6 @@ impl PagedResultSet {
             state: ResultState::Looping,
         }
     }
-
-    #[cfg(feature = "async-std-runtime")]
-    async fn close_result(&mut self) -> OrientResult<()> {
-        if self.response.has_next {
-            let mut conn = self.server.connection().await?;
-            let msg = QueryClose::new(
-                self.session_id,
-                self.token.clone(),
-                self.response.query_id.as_str(),
-            );
-            conn.send(msg.into()).await?;
-            self.response.has_next = false;
-        }
-        Ok(())
-    }
 }
 
 impl futures::Stream for PagedResultSet {
@@ -105,15 +90,15 @@ impl futures::Stream for PagedResultSet {
 impl Drop for PagedResultSet {
     #[allow(unused_must_use)]
     fn drop(&mut self) {
-        #[cfg(feature = "async-std-runtime")]
-        task::block_on(self.close_result());
+        // #[cfg(feature = "async-std-runtime")]
+        // task::block_on(self.close_result());
 
-        #[cfg(feature = "tokio-runtime")]
+        // #[cfg(feature = "tokio-runtime")]
         spawn_drop(self);
     }
 }
 
-#[cfg(feature = "tokio-runtime")]
+// #[cfg(feature = "tokio-runtime")]
 fn spawn_drop(resultset: &mut PagedResultSet) {
     let has_next = resultset.response.has_next;
     let server = resultset.server.clone();
@@ -126,7 +111,7 @@ fn spawn_drop(resultset: &mut PagedResultSet) {
     }
 }
 
-#[cfg(feature = "tokio-runtime")]
+// #[cfg(feature = "tokio-runtime")]
 async fn close_result(
     server: Arc<Server>,
     query_id: String,

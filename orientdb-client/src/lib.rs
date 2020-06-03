@@ -56,3 +56,8 @@ pub mod aio {
     pub use crate::asynchronous::session::{OSession, SessionPool};
     pub use crate::asynchronous::OrientDB;
 }
+
+#[cfg(feature = "derive")]
+pub mod derive {
+    pub use orientdb_macro::FromResult;
+}

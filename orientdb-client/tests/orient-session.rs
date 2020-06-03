@@ -124,6 +124,61 @@ fn session_query_test_with_page_size_and_close() {
     });
 }
 
+#[cfg(feature = "derive")]
+#[test]
+fn session_query_one() {
+    run_with_session("session_query_one", |session| {
+        #[derive(orientdb_client::derive::FromResult, Debug, PartialEq)]
+        struct Person {
+            name: String,
+        }
+
+        let result: Option<Person> = session
+            .query("select from OUser where name = ?")
+            .positional(&[&"admin"])
+            .fetch_one()
+            .unwrap();
+
+        assert_eq!(
+            Some(Person {
+                name: String::from("admin"),
+            }),
+            result,
+        )
+    });
+}
+
+#[cfg(feature = "derive")]
+#[test]
+fn session_query_all() {
+    run_with_session("session_query_all", |session| {
+        #[derive(orientdb_client::derive::FromResult, Debug, PartialEq)]
+        struct Person {
+            name: String,
+        }
+
+        let results: Vec<Person> = session.query("select from OUser").fetch().unwrap();
+
+        assert_eq!(3, results.len(),)
+    });
+}
+
+#[cfg(feature = "derive")]
+#[test]
+fn session_query_iter() {
+    run_with_session("session_query_iter", |session| {
+        #[derive(orientdb_client::derive::FromResult, Debug, PartialEq)]
+        struct Person {
+            name: String,
+        }
+
+        let results: Result<Vec<Person>, _> =
+            session.query("select from OUser").iter().unwrap().collect();
+
+        assert_eq!(3, results.unwrap().len())
+    });
+}
+
 #[cfg(feature = "uuid")]
 #[test]
 fn session_query_with_uuid() {
@@ -588,5 +643,64 @@ mod asynchronous {
             counter += 1;
         }
         assert_eq!(3, counter);
+    }
+
+    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
+    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
+    #[cfg(feature = "derive")]
+    async fn session_query_one() {
+        #[derive(orientdb_client::derive::FromResult, Debug, PartialEq)]
+        struct Person {
+            name: String,
+        }
+        let session = session("async_session_query_one").await;
+        let result: Option<Person> = session
+            .query("select from OUser where name = ?")
+            .positional(&[&"admin"])
+            .fetch_one()
+            .await
+            .unwrap();
+
+        assert_eq!(
+            Some(Person {
+                name: String::from("admin"),
+            }),
+            result,
+        )
+    }
+
+    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
+    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
+    #[cfg(feature = "derive")]
+    async fn session_query_all() {
+        #[derive(orientdb_client::derive::FromResult, Debug, PartialEq)]
+        struct Person {
+            name: String,
+        }
+        let session = session("async_session_query_all").await;
+        let result: Vec<Person> = session.query("select from OUser").fetch().await.unwrap();
+
+        assert_eq!(3, result.len(),)
+    }
+
+    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
+    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
+    #[cfg(feature = "derive")]
+    async fn session_query_stream() {
+        use futures::StreamExt;
+        #[derive(orientdb_client::derive::FromResult, Debug, PartialEq)]
+        struct Person {
+            name: String,
+        }
+        let session = session("async_session_query_stream").await;
+        let results = session
+            .query("select from OUser")
+            .stream::<Person>()
+            .await
+            .unwrap()
+            .collect::<Vec<_>>()
+            .await;
+
+        assert_eq!(3, results.len(),)
     }
 }
