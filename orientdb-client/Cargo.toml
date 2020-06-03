@@ -15,7 +15,7 @@ default = []
 async = ["async-trait","futures"]
 tokio-runtime = ["async","tokio","mobc/tokio"]
 async-std-runtime=["async","async-std","mobc/async-std"]
-
+derive = ["orientdb-macro"]
 
 [badges]
 travis-ci = { repository = "wolf4ood/orientdb-rs" }
@@ -35,6 +35,7 @@ futures =  { version="0.3.4", optional=true }
 mobc = {version = "0.5.7", optional = true, default-features=false, features = ["unstable"] }
 tokio = { version = "0.2", optional=true, features = ["full"] }
 uuid = { version = "0.8", optional=true }
+orientdb-macro = { path="../orientdb-macro", version="0.1", optional=true }
 
 
 

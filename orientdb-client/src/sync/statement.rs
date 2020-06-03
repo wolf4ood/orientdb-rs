@@ -2,6 +2,7 @@ use super::session::OSession;
 use crate::common::protocol::messages::request::Query;
 use crate::common::types::value::{IntoOValue, OValue};
 use crate::sync::types::resultset::ResultSet;
+use crate::types::result::FromResult;
 use crate::OrientResult;
 use std::collections::HashMap;
 
@@ -62,6 +63,44 @@ impl<'a> Statement<'a> {
     }
     pub fn run(self) -> OrientResult<impl ResultSet> {
         self.session.run(self.into())
+    }
+
+    #[cfg(feature = "derive")]
+    pub fn fetch_one<T>(self) -> OrientResult<Option<T>>
+    where
+        T: FromResult,
+    {
+        match self
+            .session
+            .run(self.into())?
+            .map(|r| r.and_then(T::from_result))
+            .next()
+        {
+            Some(s) => Ok(Some(s?)),
+            None => Ok(None),
+        }
+    }
+
+    #[cfg(feature = "derive")]
+    pub fn fetch<T>(self) -> OrientResult<Vec<T>>
+    where
+        T: FromResult,
+    {
+        self.session
+            .run(self.into())?
+            .map(|r| r.and_then(T::from_result))
+            .collect()
+    }
+
+    #[cfg(feature = "derive")]
+    pub fn iter<T>(self) -> OrientResult<impl std::iter::Iterator<Item = OrientResult<T>>>
+    where
+        T: FromResult,
+    {
+        Ok(self
+            .session
+            .run(self.into())?
+            .map(|r| r.and_then(T::from_result)))
     }
 }
 

@@ -79,3 +79,9 @@ impl From<Projection> for OResult {
         }
     }
 }
+
+pub trait FromResult {
+    fn from_result(result: OResult) -> OrientResult<Self>
+    where
+        Self: Sized;
+}

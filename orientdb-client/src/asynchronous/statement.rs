@@ -2,9 +2,13 @@ use super::session::OSession;
 use crate::common::protocol::messages::request::Query;
 use crate::common::types::value::{IntoOValue, OValue};
 use crate::common::types::OResult;
+use crate::types::result::FromResult;
 use crate::OrientResult;
 use futures::Stream;
 use std::collections::HashMap;
+
+#[cfg(feature = "derive")]
+use futures::StreamExt;
 
 pub struct Statement<'a> {
     session: &'a OSession,
@@ -63,6 +67,54 @@ impl<'a> Statement<'a> {
     }
     pub async fn run(self) -> OrientResult<impl Stream<Item = OrientResult<OResult>>> {
         self.session.run(self.into()).await
+    }
+
+    #[cfg(feature = "derive")]
+    pub async fn fetch_one<T>(self) -> OrientResult<Option<T>>
+    where
+        T: FromResult,
+    {
+        let mut stream = self
+            .session
+            .run(self.into())
+            .await?
+            .map(|r| r.and_then(T::from_result));
+
+        match stream.next().await {
+            Some(r) => Ok(Some(r?)),
+            None => Ok(None),
+        }
+    }
+
+    #[cfg(feature = "derive")]
+    pub async fn fetch<T>(self) -> OrientResult<Vec<T>>
+    where
+        T: FromResult,
+    {
+        let mut stream = self
+            .session
+            .run(self.into())
+            .await?
+            .map(|r| r.and_then(T::from_result));
+
+        let mut results = Vec::new();
+
+        while let Some(r) = stream.next().await {
+            results.push(r?);
+        }
+        Ok(results)
+    }
+
+    #[cfg(feature = "derive")]
+    pub async fn stream<T>(self) -> OrientResult<impl Stream<Item = OrientResult<T>>>
+    where
+        T: FromResult,
+    {
+        Ok(self
+            .session
+            .run(self.into())
+            .await?
+            .map(|r| r.and_then(T::from_result)))
     }
 }
 
