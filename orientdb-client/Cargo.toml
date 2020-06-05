@@ -62,3 +62,9 @@ required-features = ["async-std-runtime"]
 name="async-tokio-simple"
 path="examples/async-tokio-simple.rs"
 required-features = ["tokio-runtime"]
+
+
+[[example]]
+name="async-sugar"
+path="examples/async-sugar.rs"
+required-features = ["async-std-runtime","sugar"]
