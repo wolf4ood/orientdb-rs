@@ -3,6 +3,11 @@ name = "orientdb-macro"
 version = "0.1.0"
 authors = ["wolf4ood <enrico.risa@gmail.com>"]
 edition = "2018"
+description= "Macros for OrientDB Rust client"
+repository = "https://github.com/wolf4ood/orientdb-rs"
+keywords = ["database", "graphs","orientdb","macro"]
+categories = ["database"]
+readme = "README.md"
 
 [lib]
 proc-macro = true
