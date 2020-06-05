@@ -150,6 +150,22 @@ fn session_query_one() {
 
 #[cfg(feature = "sugar")]
 #[test]
+fn session_query_one_result() {
+    use orientdb_client::types::OResult;
+
+    run_with_session("session_query_one_result", |session| {
+        let result: Option<OResult> = session
+            .query("select from OUser where name = ?")
+            .positional(&[&"admin"])
+            .fetch_one()
+            .unwrap();
+
+        assert_eq!("admin", result.unwrap().get::<String>("name"))
+    });
+}
+
+#[cfg(feature = "sugar")]
+#[test]
 fn session_query_all() {
     run_with_session("session_query_all", |session| {
         #[derive(orientdb_client::derive::FromResult, Debug, PartialEq)]
@@ -667,6 +683,23 @@ mod asynchronous {
             }),
             result,
         )
+    }
+
+    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
+    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
+    #[cfg(feature = "sugar")]
+    async fn session_query_one_result() {
+        use orientdb_client::types::OResult;
+
+        let session = session("async_session_query_one_result").await;
+        let result: Option<OResult> = session
+            .query("select from OUser where name = ?")
+            .positional(&[&"admin"])
+            .fetch_one()
+            .await
+            .unwrap();
+
+        assert_eq!("admin", result.unwrap().get::<String>("name"))
     }
 
     #[cfg_attr(feature = "async-std-runtime", async_std::test)]

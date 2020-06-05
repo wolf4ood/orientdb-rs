@@ -85,3 +85,12 @@ pub trait FromResult {
     where
         Self: Sized;
 }
+
+impl FromResult for OResult {
+    fn from_result(result: OResult) -> OrientResult<Self>
+    where
+        Self: Sized,
+    {
+        Ok(result)
+    }
+}
