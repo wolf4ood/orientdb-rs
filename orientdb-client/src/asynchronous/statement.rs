@@ -2,12 +2,13 @@ use super::session::OSession;
 use crate::common::protocol::messages::request::Query;
 use crate::common::types::value::{IntoOValue, OValue};
 use crate::common::types::OResult;
+#[cfg(feature = "sugar")]
 use crate::types::result::FromResult;
 use crate::OrientResult;
 use futures::Stream;
 use std::collections::HashMap;
 
-#[cfg(feature = "derive")]
+#[cfg(feature = "sugar")]
 use futures::StreamExt;
 
 pub struct Statement<'a> {
@@ -69,7 +70,7 @@ impl<'a> Statement<'a> {
         self.session.run(self.into()).await
     }
 
-    #[cfg(feature = "derive")]
+    #[cfg(feature = "sugar")]
     pub async fn fetch_one<T>(self) -> OrientResult<Option<T>>
     where
         T: FromResult,
@@ -86,7 +87,7 @@ impl<'a> Statement<'a> {
         }
     }
 
-    #[cfg(feature = "derive")]
+    #[cfg(feature = "sugar")]
     pub async fn fetch<T>(self) -> OrientResult<Vec<T>>
     where
         T: FromResult,
@@ -105,7 +106,7 @@ impl<'a> Statement<'a> {
         Ok(results)
     }
 
-    #[cfg(feature = "derive")]
+    #[cfg(feature = "sugar")]
     pub async fn stream<T>(self) -> OrientResult<impl Stream<Item = OrientResult<T>>>
     where
         T: FromResult,

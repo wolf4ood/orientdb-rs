@@ -57,7 +57,7 @@ pub mod aio {
     pub use crate::asynchronous::OrientDB;
 }
 
-#[cfg(feature = "derive")]
+#[cfg(feature = "sugar")]
 pub mod derive {
     pub use orientdb_macro::FromResult;
 }

@@ -2,6 +2,7 @@ use super::session::OSession;
 use crate::common::protocol::messages::request::Query;
 use crate::common::types::value::{IntoOValue, OValue};
 use crate::sync::types::resultset::ResultSet;
+#[cfg(feature = "sugar")]
 use crate::types::result::FromResult;
 use crate::OrientResult;
 use std::collections::HashMap;
@@ -65,7 +66,7 @@ impl<'a> Statement<'a> {
         self.session.run(self.into())
     }
 
-    #[cfg(feature = "derive")]
+    #[cfg(feature = "sugar")]
     pub fn fetch_one<T>(self) -> OrientResult<Option<T>>
     where
         T: FromResult,
@@ -81,7 +82,7 @@ impl<'a> Statement<'a> {
         }
     }
 
-    #[cfg(feature = "derive")]
+    #[cfg(feature = "sugar")]
     pub fn fetch<T>(self) -> OrientResult<Vec<T>>
     where
         T: FromResult,
@@ -92,7 +93,7 @@ impl<'a> Statement<'a> {
             .collect()
     }
 
-    #[cfg(feature = "derive")]
+    #[cfg(feature = "sugar")]
     pub fn iter<T>(self) -> OrientResult<impl std::iter::Iterator<Item = OrientResult<T>>>
     where
         T: FromResult,

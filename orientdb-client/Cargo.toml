@@ -15,7 +15,7 @@ default = []
 async = ["async-trait","futures"]
 tokio-runtime = ["async","tokio","mobc/tokio"]
 async-std-runtime=["async","async-std","mobc/async-std"]
-derive = ["orientdb-macro"]
+sugar = ["orientdb-macro"]
 
 [badges]
 travis-ci = { repository = "wolf4ood/orientdb-rs" }

@@ -124,7 +124,7 @@ fn session_query_test_with_page_size_and_close() {
     });
 }
 
-#[cfg(feature = "derive")]
+#[cfg(feature = "sugar")]
 #[test]
 fn session_query_one() {
     run_with_session("session_query_one", |session| {
@@ -148,7 +148,7 @@ fn session_query_one() {
     });
 }
 
-#[cfg(feature = "derive")]
+#[cfg(feature = "sugar")]
 #[test]
 fn session_query_all() {
     run_with_session("session_query_all", |session| {
@@ -163,7 +163,7 @@ fn session_query_all() {
     });
 }
 
-#[cfg(feature = "derive")]
+#[cfg(feature = "sugar")]
 #[test]
 fn session_query_iter() {
     run_with_session("session_query_iter", |session| {
@@ -647,7 +647,7 @@ mod asynchronous {
 
     #[cfg_attr(feature = "async-std-runtime", async_std::test)]
     #[cfg_attr(feature = "tokio-runtime", tokio::test)]
-    #[cfg(feature = "derive")]
+    #[cfg(feature = "sugar")]
     async fn session_query_one() {
         #[derive(orientdb_client::derive::FromResult, Debug, PartialEq)]
         struct Person {
@@ -671,7 +671,7 @@ mod asynchronous {
 
     #[cfg_attr(feature = "async-std-runtime", async_std::test)]
     #[cfg_attr(feature = "tokio-runtime", tokio::test)]
-    #[cfg(feature = "derive")]
+    #[cfg(feature = "sugar")]
     async fn session_query_all() {
         #[derive(orientdb_client::derive::FromResult, Debug, PartialEq)]
         struct Person {
@@ -685,7 +685,7 @@ mod asynchronous {
 
     #[cfg_attr(feature = "async-std-runtime", async_std::test)]
     #[cfg_attr(feature = "tokio-runtime", tokio::test)]
-    #[cfg(feature = "derive")]
+    #[cfg(feature = "sugar")]
     async fn session_query_stream() {
         use futures::StreamExt;
         #[derive(orientdb_client::derive::FromResult, Debug, PartialEq)]
