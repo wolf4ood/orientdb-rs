@@ -27,6 +27,12 @@ Install from [crates.io](https://crates.io/)
 orientdb_client = "*"
 ```
 
+### Cargo Features
+
+- `async-std-runtime`: use the async APIs with `async-std`.
+- `tokio-runtime`: use the async APIs with `tokio`.
+- `uuid`: Add support for UUID.
+- `sugar`: Add ergonimic APIs for querying and binding results to structs
 
 ### Example
 
@@ -113,6 +119,92 @@ async fn main() -> OrientResult<()> {
     Ok(())
 }
 ```
+
+
+### Additional Features
+
+
+#### `sugar` feature
+
+
+The `sugar` feature add 3 methods to the query builder for spawning the query. 
+
+- `fetch_one`
+- `fetch`
+- `stream` for async or `iter` for sync
+
+
+They should be used instead of `run` APIs when you want to execute the query and map the `OResult` into a struct. 
+
+The `sugar` is supported in sync and async mode.
+
+
+*fetch_one*
+
+Consume the stream and fetch the first result if any.
+
+```rust
+use orientdb_client::derive::FromResult;
+#[derive(FromResult, Debug)]
+struct User {
+    name: String,
+}
+
+// fetch one
+let user: Option<User> = session
+    .query("select from OUser limit 1")
+    .fetch_one()
+    .await?;
+
+println!("User {:?}", user);`
+```
+
+
+*fetch*
+
+Collect the stream to a `Vec` and map to struct.
+
+```rust
+use orientdb_client::derive::FromResult;
+#[derive(FromResult, Debug)]
+struct User {
+    name: String,
+}
+
+// fetch one
+let user: Vec<User> = session
+    .query("select from OUser limit 1")
+    .fetch()
+    .await?;
+
+println!("Users {:?}", user);`
+```
+
+
+*stream*
+
+ Map each item of the stream to a struct.
+
+```rust
+use orientdb_client::derive::FromResult;
+#[derive(FromResult, Debug)]
+struct User {
+    name: String,
+}
+
+// fetch stream and collect
+let stream = session
+            .query("select from OUser")
+            .stream::<User>()
+            .await?
+            .collect::<Vec<_>>()
+            .await;
+println!("Users {:?}", user);
+
+```
+
+
+
 
 ### Development
 
