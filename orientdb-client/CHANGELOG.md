@@ -10,11 +10,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-## [0.4.1] - 2020-05-24
+## [0.5.0] - 2020-06-22
+
+### Added
+
+### Fixed
+
+- [#21](https://github.com/wolf4ood/orientdb-rs/issues/21) Fixed binding to structs with optional field
+
+
+## [0.5.0] - 2020-06-05
 
 ### Added
 
 - [#17](https://github.com/wolf4ood/orientdb-rs/issues/17) Added Uuid support
+- [#19](https://github.com/wolf4ood/orientdb-rs/issues/19) Query builder enhancement
 
 ### Fixed
 
