@@ -15,7 +15,7 @@ pub fn derive(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                 let ty = &field.ty;
 
                 Some(parse_quote!(
-                    let #id: #ty = result.get_checked(#id_s)?;
+                    let #id: #ty = result.get_or_null(#id_s)?;
                 ))
             });
 
