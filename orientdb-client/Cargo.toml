@@ -35,7 +35,7 @@ futures =  { version="0.3.4", optional=true }
 mobc = {version = "0.5.7", optional = true, default-features=false, features = ["unstable"] }
 tokio = { version = "0.2", optional=true, features = ["full"] }
 uuid = { version = "0.8", optional=true }
-orientdb-macro = { path="../orientdb-macro", version="0.1.1", optional=true }
+orientdb-macro = { path="../orientdb-macro", version="0.2", optional=true }
 
 
 
