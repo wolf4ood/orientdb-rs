@@ -49,44 +49,6 @@ fn main() -> Result<(), Box<std::error::Error>> {
     let client = OrientDB::connect(("localhost",2424))?;
 
     let session = client.session("demodb","admin","admin")?;
-## OrientDB Client
-
-
-A Rust Client for OrientDB. Supports sync and async (tokio and async-std)
-
-
-### Installation
-
-
-Install from [crates.io](https://crates.io/)
-
-```toml
-[dependencies]
-orientdb_client = "*"
-```
-
-### Cargo Features
-
-- `async-std-runtime`: use the async APIs with `async-std`.
-- `tokio-runtime`: use the async APIs with `tokio`.
-- `uuid`: Add support for UUID.
-- `sugar`: Add ergonimic APIs for querying and binding results to structs
-
-### Example
-
-
-#### Basic Usage Synchronous
-
-
-
-```rust
-
-use orientdb_client::{OrientDB};
-
-fn main() -> Result<(), Box<std::error::Error>> {
-    let client = OrientDB::connect(("localhost",2424))?;
-
-    let session = client.session("demodb","admin","admin")?;
 
     let results : Vec<_> = session.query("select from V where id = :param").named(&[("param", &1)]).run()?.collect();
 
