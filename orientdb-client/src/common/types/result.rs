@@ -47,6 +47,14 @@ impl OResult {
         }
     }
 
+    pub fn get_or_null<T>(&self, name: &str) -> OrientResult<T>
+    where
+        T: FromOValue,
+    {
+        let value = self.get_raw(name).unwrap_or_else(|| &OValue::Null);
+        T::from_value(value)
+    }
+
     pub fn get<T>(&self, name: &str) -> T
     where
         T: FromOValue,

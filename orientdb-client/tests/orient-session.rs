@@ -131,6 +131,7 @@ fn session_query_one() {
         #[derive(orientdb_client::derive::FromResult, Debug, PartialEq)]
         struct Person {
             name: String,
+            age: Option<i32>,
         }
 
         let result: Option<Person> = session
@@ -142,6 +143,7 @@ fn session_query_one() {
         assert_eq!(
             Some(Person {
                 name: String::from("admin"),
+                age: None
             }),
             result,
         )
@@ -709,6 +711,7 @@ mod asynchronous {
         #[derive(orientdb_client::derive::FromResult, Debug, PartialEq)]
         struct Person {
             name: String,
+            age: Option<i32>,
         }
         let session = session("async_session_query_all").await;
         let result: Vec<Person> = session.query("select from OUser").fetch().await.unwrap();
