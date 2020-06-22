@@ -100,7 +100,7 @@ impl OrientDBClientInternal {
             response.session_id,
             response.token,
             self.cluster.clone(),
-            server.clone(),
+            server,
             pooled,
         ))
     }
