@@ -57,7 +57,7 @@ Install from [crates.io](https://crates.io/)
 
 ```toml
 [dependencies]
-orientdb_client = "*"
+orientdb-client = "*"
 ```
 
 ### Cargo Features
