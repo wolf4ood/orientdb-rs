@@ -12,7 +12,7 @@ use crate::OrientResult;
 mod async_std_use {
     pub use async_std::io::BufReader;
     pub use async_std::net::TcpStream;
-    pub use async_std::sync::{channel, Mutex, Receiver, Sender};
+    pub use async_std::sync::Mutex;
     pub use async_std::task;
     pub use std::sync::Arc;
 }
@@ -23,7 +23,6 @@ use async_std_use::*;
 mod tokio_use {
     pub use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt, BufReader, ReadHalf, WriteHalf};
     pub use tokio::net::TcpStream;
-    pub use tokio::sync::mpsc::{channel, Receiver, Sender};
     pub use tokio::sync::Mutex;
     pub use tokio::task;
 }
@@ -104,7 +103,13 @@ impl io::AsyncRead for StreamReader {
         cx: &mut Context<'_>,
         buf: &mut [u8],
     ) -> Poll<tokio::io::Result<usize>> {
-        Pin::new(&mut self.0).poll_read(cx, buf)
+        use futures::ready;
+        use tokio::io::ReadBuf;
+        let mut read_buf = ReadBuf::new(buf);
+
+        ready!(Pin::new(&mut self.0).poll_read(cx, &mut read_buf))?;
+
+        Poll::Ready(Ok(read_buf.filled().len()))
     }
 }
 

@@ -358,7 +358,7 @@ mod asynchronous {
     }
 
     #[cfg_attr(feature = "async-std-runtime", async_std::test)]
-    #[cfg_attr(feature = "tokio-runtime", tokio::test(threaded_scheduler))]
+    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
     async fn session_query_test_simple() {
         let session = session("async_session_query_test_simple").await;
 
