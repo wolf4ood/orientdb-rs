@@ -1,0 +1,52 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build_and_test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        rust: [stable]
+        orientdb-server: [3.1.1, 3.2.0]
+    steps:
+
+      - uses: actions/checkout@v2
+      - name: Starting Gremlin Servers
+        run: |
+          docker-compose -f ./docker-compose/docker-compose.yaml up -d 
+        env: 
+          ORIENTDB_SERVER: ${{ matrix.orientdb-server }}
+
+      - uses: actions/checkout@v2
+      - name: Install latest ${{ matrix.rust }}
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          profile: minimal
+          override: true
+          components: rustfmt
+
+      - name: Run cargo fmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+      - name: Run cargo test with tokio
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --manifest-path orientdb-client/Cargo.toml  --features=tokio-runtime,uuid,sugar
+      - name: Run cargo test with async-std
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --manifest-path orientdb-client/Cargo.toml --features=async-std-runtime,uuid,sugar
