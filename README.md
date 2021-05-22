@@ -1,13 +1,46 @@
-# orientdb-rs
+<h1 align="center">orientdb-rs</h1>
 
-[![Build Status](https://travis-ci.org/wolf4ood/orientdb-rs.svg?branch=master)](https://travis-ci.org/wolf4ood/orientdb-rs)
-[![Codecov Status](https://codecov.io/gh/wolf4ood/orientdb-rs/branch/master/graph/badge.svg)](https://codecov.io/gh/wolf4ood/orientdb-rs)
-[![Crates.io](https://img.shields.io/crates/v/orientdb-client.svg)](https://crates.io/crates/orientdb-client)
-[![Crates.io Download](https://img.shields.io/crates/d/orientdb-client.svg)](https://crates.io/crates/orientdb-client)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Docs](https://docs.rs/orientdb-client/badge.svg)](https://docs.rs/orientdb-client)
-[![dependency status](https://deps.rs/repo/github/wolf4ood/orientdb-rs/status.svg)](https://deps.rs/repo/github/wolf4ood/orientdb-rs)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/e29ea9b1c90a47f797d259de04eb595b)](https://www.codacy.com/app/wolf4ood/orientdb-rs?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=wolf4ood/orientdb-rs&amp;utm_campaign=Badge_Grade)
+<div align="center">
+ <strong>
+   A Rust Client for OrientDB
+ </strong>
+</div>
+
+
+<br />
+
+<div align="center">
+  <a href="https://github.com/wolf4ood/orientdb-rs/actions?query=workflow%3ATests">
+    <img src="https://github.com/wolf4ood/orientdb-rs/workflows/Tests/badge.svg"
+    alt="Tests status" />
+  </a>
+  
+  <a href="https://coveralls.io/github/wolf4ood/orientdb-rs?branch=master">
+    <img src="https://coveralls.io/repos/github/wolf4ood/orientdb-rs/badge.svg?branch=master"
+    alt="Coverage status" />
+  </a>
+  <a href="https://crates.io/crates/orientdb-client">
+    <img src="https://img.shields.io/crates/d/orientdb-client.svg?style=flat-square"
+      alt="Download" />
+  </a>
+  <a href="https://docs.rs/orientdb-client">
+    <img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square"
+      alt="docs.rs docs" />
+  </a>
+
+   <a href="https://opensource.org/licenses/Apache-2.0">
+    <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"
+      alt="license" />
+  </a>
+
+   <a href="https://deps.rs/repo/github/wolf4ood/orientdb-rs">
+    <img src="https://deps.rs/repo/github/wolf4ood/orientdb-rs/status.svg"
+      alt="license" />
+  </a>
+
+
+  
+</div>
 
 
 
