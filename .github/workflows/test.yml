@@ -16,7 +16,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         rust: [stable]
-        orientdb-server: [3.1.11, 3.2.0]
+        orientdb-server: [3.1.11]
     steps:
 
       - uses: actions/checkout@v2
