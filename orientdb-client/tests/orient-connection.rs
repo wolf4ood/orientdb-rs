@@ -46,10 +46,8 @@ fn test_connection_send_open_wrong_db() {
     );
     assert!(res.is_err());
     let err = res.unwrap_err();
-    assert_eq!(
-        "Request error: Cannot open database \'wrong_database\'",
-        err.to_string()
-    );
+
+    assert!(err.to_string().contains("Request error: Cannot open"));
 }
 
 #[cfg(feature = "async")]
@@ -112,10 +110,8 @@ mod asynchronous {
 
         assert!(res.is_err());
         let err = res.unwrap_err();
-        assert_eq!(
-            "Request error: Cannot open database \'wrong_database\'",
-            err.to_string()
-        );
+
+        assert!(err.to_string().contains("Request error: Cannot open"));
         Ok(())
     }
 }
