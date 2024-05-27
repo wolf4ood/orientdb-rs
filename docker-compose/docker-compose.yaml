@@ -4,6 +4,7 @@ services:
     image: orientdb:${ORIENTDB_VERSION} 
     environment: 
       - ORIENTDB_ROOT_PASSWORD=root
+      - ORIENTDB_security.createDefaultUsers=true
     ports:
       - "2424:2424"
       - "2480:2480"
