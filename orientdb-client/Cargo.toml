@@ -40,7 +40,7 @@ orientdb-macro = { path="../orientdb-macro", version="0.2", optional=true }
 
 
 [dev-dependencies]
-dotenv = "0.14.1"
+dotenv = "0.15.0"
 uuid = { version = "1.6", features=["v4"] }
 
 [[example]]
