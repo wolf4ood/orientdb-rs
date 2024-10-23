@@ -1,5 +1,5 @@
 use crate::common::protocol::messages::response::{
-    Connect, CreateDB, DropDB, ExistDB, Header, Open, Query, QueryClose,
+    Connect, CreateDB, DropDB, ExistDB, Header, Open, Query, QueryClose, ServerQuery,
 };
 use crate::common::types::error::RequestError;
 use crate::OrientResult;
@@ -21,4 +21,6 @@ pub trait VersionedDecoder {
     fn decode_query_close<R: Read>(_buf: &mut R) -> OrientResult<QueryClose> {
         Ok(QueryClose {})
     }
+
+    fn decode_server_query<R: Read>(buf: &mut R) -> OrientResult<ServerQuery>;
 }

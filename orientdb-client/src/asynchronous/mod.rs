@@ -2,6 +2,7 @@ pub mod client;
 pub mod live;
 pub mod live_statement;
 pub mod network;
+pub mod server_statement;
 pub mod session;
 pub mod statement;
 pub mod types;

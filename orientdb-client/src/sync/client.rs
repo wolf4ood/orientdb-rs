@@ -1,11 +1,13 @@
 use super::network::cluster::SyncConnection;
 use super::network::cluster::{Cluster, Server};
 use crate::common::protocol::messages::request::{
-    Close, Connect, CreateDB, DropDB, ExistDB, MsgHeader, Open,
+    Close, Connect, CreateDB, DropDB, ExistDB, MsgHeader, Open, ServerQuery,
 };
 use crate::common::protocol::messages::response;
 use crate::common::ConnectionOptions;
+use crate::sync::server_statement::ServerStatement;
 use crate::sync::session::{OSession, SessionPool, SessionPoolManager};
+use crate::sync::types::resultset::{ResultSet, ServerResultSet};
 use crate::{DatabaseType, OrientResult};
 use std::net::SocketAddr;
 use std::net::ToSocketAddrs;
@@ -185,6 +187,31 @@ impl OrientDBClientInternal {
                 )?
                 .payload();
             Ok(())
+        })
+    }
+
+    pub fn execute(
+        &self,
+        user: &str,
+        password: &str,
+        query: &str,
+    ) -> OrientResult<ServerStatement> {
+        Ok(ServerStatement::new(
+            self,
+            user.to_string(),
+            password.to_string(),
+            query.to_string(),
+        ))
+    }
+
+    pub(crate) fn run(&self, stmt: ServerStatement) -> OrientResult<impl ResultSet> {
+        let user = stmt.user.clone();
+        let pwd = stmt.password.clone();
+        self.run_as_admin(&user, &pwd, move |session, conn| {
+            let response: response::ServerQuery = conn
+                .send(stmt.into_query(session.session_id, session.token).into())?
+                .payload();
+            Ok(ServerResultSet::new(response))
         })
     }
 }

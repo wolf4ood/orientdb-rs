@@ -1,6 +1,6 @@
 use crate::asynchronous::network::cluster::Server;
 use crate::common::protocol::messages::request::{QueryClose, QueryNext};
-use crate::common::protocol::messages::response::Query;
+use crate::common::protocol::messages::response::{Query, ServerQuery};
 use crate::common::types::result::OResult;
 use crate::OrientResult;
 #[cfg(feature = "async-std-runtime")]
@@ -122,4 +122,22 @@ async fn close_result(
     let msg = QueryClose::new(session_id, token, query_id);
     conn.send(msg.into()).await?;
     Ok(())
+}
+
+pub struct ServerResultSet {
+    response: ServerQuery,
+}
+
+impl ServerResultSet {
+    pub(crate) fn new(response: ServerQuery) -> ServerResultSet {
+        ServerResultSet { response }
+    }
+}
+
+impl futures::Stream for ServerResultSet {
+    type Item = OrientResult<OResult>;
+
+    fn poll_next(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        Poll::Ready(self.response.records.pop_front().map(|x| Ok(x)))
+    }
 }

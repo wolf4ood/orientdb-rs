@@ -1,6 +1,8 @@
 use super::super::v37::Protocol37;
 use crate::common::protocol::deserializer::DocumentDeserializer;
-use crate::common::protocol::messages::response::{Connect, ExistDB, Header, Open, Query, Status};
+use crate::common::protocol::messages::response::{
+    Connect, ExistDB, Header, Open, Query, ServerQuery, Status,
+};
 use crate::common::types::error::{OError, RequestError};
 use crate::common::types::OResult;
 use crate::sync::protocol::decoder::VersionedDecoder;
@@ -58,6 +60,33 @@ impl VersionedDecoder for Protocol37 {
         let _reaload_metadata = reader::read_bool(buf)?;
 
         Ok(Query::new(
+            query_id,
+            changes,
+            execution_plan,
+            records,
+            has_next,
+            stats,
+        ))
+    }
+
+    fn decode_server_query<R: Read>(buf: &mut R) -> OrientResult<ServerQuery> {
+        let query_id = reader::read_string(buf)?;
+        let changes = reader::read_bool(buf)?;
+        let has_plan = reader::read_bool(buf)?;
+
+        let execution_plan = if has_plan {
+            Some(read_result(buf)?)
+        } else {
+            None
+        };
+
+        let _prefetched = reader::read_i32(buf)?;
+        let records = read_result_set(buf)?;
+        let has_next = reader::read_bool(buf)?;
+        let stats = read_query_stats(buf)?;
+        let _reaload_metadata = reader::read_bool(buf)?;
+
+        Ok(ServerQuery::new(
             query_id,
             changes,
             execution_plan,

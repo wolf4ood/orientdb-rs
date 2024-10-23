@@ -190,6 +190,45 @@ impl From<QueryClose> for ResponseType {
     }
 }
 
+#[derive(Debug)]
+pub struct ServerQuery {
+    pub query_id: String,
+    pub tx_changes: bool,
+    pub execution_plan: Option<OResult>,
+    pub records: VecDeque<OResult>,
+    pub has_next: bool,
+    pub stats: HashMap<String, i64>,
+}
+
+impl ServerQuery {
+    pub fn new<T>(
+        query_id: T,
+        tx_changes: bool,
+        execution_plan: Option<OResult>,
+        records: VecDeque<OResult>,
+        has_next: bool,
+        stats: HashMap<String, i64>,
+    ) -> ServerQuery
+    where
+        T: Into<String>,
+    {
+        ServerQuery {
+            query_id: query_id.into(),
+            tx_changes,
+            execution_plan,
+            records,
+            has_next,
+            stats,
+        }
+    }
+}
+
+impl From<ServerQuery> for ResponseType {
+    fn from(input: ServerQuery) -> ResponseType {
+        ResponseType::ServerQuery(Some(input))
+    }
+}
+
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
 pub enum ResponseType {
@@ -200,6 +239,7 @@ pub enum ResponseType {
     CreateDB(Option<CreateDB>),
     ExistDB(Option<ExistDB>),
     DropDB(Option<DropDB>),
+    ServerQuery(Option<ServerQuery>),
     LiveQuery(Option<LiveQuery>),
     LiveQueryResult(Option<LiveQueryResult>),
     QueryClose(Option<QueryClose>),
@@ -259,3 +299,4 @@ impl_payload!(ExistDB);
 impl_payload!(Connect);
 impl_payload!(LiveQuery);
 impl_payload!(LiveQueryResult);
+impl_payload!(ServerQuery);

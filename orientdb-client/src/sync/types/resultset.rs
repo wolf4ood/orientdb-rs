@@ -1,5 +1,5 @@
 use crate::common::protocol::messages::request::{QueryClose, QueryNext};
-use crate::common::protocol::messages::response::Query;
+use crate::common::protocol::messages::response::{Query, ServerQuery};
 use crate::common::types::result::OResult;
 use crate::sync::network::cluster::Server;
 use crate::OrientResult;
@@ -98,5 +98,29 @@ impl Drop for PagedResultSet {
     #[allow(unused_must_use)]
     fn drop(&mut self) {
         self.close_result();
+    }
+}
+
+pub struct ServerResultSet {
+    response: ServerQuery,
+}
+
+impl ServerResultSet {
+    pub(crate) fn new(response: ServerQuery) -> ServerResultSet {
+        ServerResultSet { response }
+    }
+}
+
+impl ResultSet for ServerResultSet {
+    fn close(self) -> OrientResult<()> {
+        Ok(())
+    }
+}
+
+impl Iterator for ServerResultSet {
+    type Item = OrientResult<OResult>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.response.records.pop_front().map(|x| Ok(x))
     }
 }
