@@ -140,7 +140,7 @@ impl VersionedEncoder for Protocol37 {
     }
 
     fn encode_server_query(buf: &mut OBuffer, query: ServerQuery) -> OrientResult<()> {
-        buf.put_i8(45)?;
+        buf.put_i8(50)?;
         buf.put_i32(query.session_id)?;
 
         if let Some(t) = query.token {
