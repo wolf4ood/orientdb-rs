@@ -34,14 +34,14 @@ async-trait = { version = "0.1.10", optional = true }
 futures =  { version="0.3", optional=true }
 mobc = {version = "0.7", optional = true, default-features=false, features = ["unstable"] }
 tokio = { version = "1", optional=true, features = ["full"] }
-uuid = { version = "1.6", optional=true }
+uuid = { version = "1.10", optional=true }
 orientdb-macro = { path="../orientdb-macro", version="0.2", optional=true }
 
 
 
 [dev-dependencies]
-dotenv = "0.14.1"
-uuid = { version = "1.6", features=["v4"] }
+dotenv = "0.15.0"
+uuid = { version = "1.10", features=["v4"] }
 
 [[example]]
 name="async-simple"
