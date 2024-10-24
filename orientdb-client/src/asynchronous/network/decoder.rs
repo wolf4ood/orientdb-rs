@@ -3,7 +3,8 @@ use crate::common::protocol::deserializer::DocumentDeserializer;
 use crate::common::protocol::messages::response::Response;
 use crate::common::protocol::messages::response::Status;
 use crate::common::protocol::messages::response::{
-    Connect, CreateDB, DropDB, ExistDB, Header, LiveQuery, LiveQueryResult, Open, Query, QueryClose,
+    Connect, CreateDB, DropDB, ExistDB, Header, LiveQuery, LiveQueryResult, Open, Query,
+    QueryClose, ServerQuery,
 };
 use crate::common::types::error::{OError, RequestError};
 use crate::common::types::OResult;
@@ -174,6 +175,36 @@ impl VersionedDecoder for Protocol37 {
             stats,
         ))
     }
+
+    async fn decode_server_query<T>(buf: &mut T) -> OrientResult<ServerQuery>
+    where
+        T: AsyncRead + Unpin + Send,
+    {
+        let query_id = reader::read_string(buf).await?;
+        let changes = reader::read_bool(buf).await?;
+        let has_plan = reader::read_bool(buf).await?;
+
+        let execution_plan = if has_plan {
+            Some(read_result(buf).await?)
+        } else {
+            None
+        };
+
+        let _prefetched = reader::read_i32(buf).await?;
+        let records = read_result_set(buf).await?;
+        let has_next = reader::read_bool(buf).await?;
+        let stats = read_query_stats(buf).await?;
+        let _reaload_metadata = reader::read_bool(buf).await?;
+
+        Ok(ServerQuery::new(
+            query_id,
+            changes,
+            execution_plan,
+            records,
+            has_next,
+            stats,
+        ))
+    }
     async fn decode_connect<T>(buf: &mut T) -> OrientResult<Connect>
     where
         T: AsyncRead + Unpin + Send,
@@ -206,6 +237,10 @@ pub trait VersionedDecoder {
         T: AsyncRead + Unpin + Send;
 
     async fn decode_query<T>(buf: &mut T) -> OrientResult<Query>
+    where
+        T: AsyncRead + Unpin + Send;
+
+    async fn decode_server_query<T>(buf: &mut T) -> OrientResult<ServerQuery>
     where
         T: AsyncRead + Unpin + Send;
 
@@ -259,6 +294,7 @@ where
             4 => T::decode_create_db(buf).await?.into(),
             6 => T::decode_exist(buf).await?.into(),
             7 => T::decode_drop_db(buf).await?.into(),
+            50 => T::decode_server_query(buf).await?.into(),
             45 => T::decode_query(buf).await?.into(),
             46 => T::decode_query_close(buf).await?.into(),
             47 => T::decode_query(buf).await?.into(),
