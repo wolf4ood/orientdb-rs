@@ -1,9 +1,9 @@
 use dotenv::dotenv;
-use std::env;
-
+use orientdb_client::sync::types::resultset::ResultSet;
 use orientdb_client::DatabaseType;
 use orientdb_client::OSession;
 use orientdb_client::OrientDB;
+use std::env;
 
 #[derive(Debug)]
 pub struct OrientDBTest {
@@ -98,13 +98,17 @@ pub fn create_database(db: &str, odb: &OrientDB, config: &OrientDBTest) {
         )
         .expect(&format!("Cannot drop database with name {}", db));
     }
-    odb.create_database(
-        db,
+    odb.execute(
         &config.r_password,
         &config.r_password,
-        DatabaseType::Memory,
+        &format!("create database {} memory users(admin identified by 'admin' role admin, reader identified by 'reader' role reader, writer identified by 'writer' role writer)", db) 
     )
-    .expect(&format!("Cannot create database with name {}", db));
+    .expect(&format!("Cannot create database with name {}", db)).
+    run()
+    .expect(&format!("Cannot create database with name {}", db))
+    .close()
+    .expect(&format!("Cannot create database with name {}", db))
+    ;
 }
 
 #[allow(dead_code)]
@@ -219,13 +223,15 @@ pub mod asynchronous {
             .await
             .expect(&format!("Cannot drop database with name {}", db));
         }
-        odb.create_database(
-            db,
-            &config.r_password,
-            &config.r_password,
-            DatabaseType::Memory,
-        )
-        .await
-        .expect(&format!("Cannot create database with name {}", db));
+
+        let _ = odb.execute(
+        &config.r_password,
+        &config.r_password,
+        &format!("create database {} memory users(admin identified by 'admin' role admin, reader identified by 'reader' role reader, writer identified by 'writer' role writer)", db) 
+    ).await
+    .expect(&format!("Cannot create database with name {}", db)).
+    run().await
+    .expect(&format!("Cannot create database with name {}", db))
+    ;
     }
 }

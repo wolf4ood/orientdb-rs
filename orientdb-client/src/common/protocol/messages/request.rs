@@ -347,6 +347,53 @@ impl From<DropDB> for Request {
     }
 }
 
+// Server Query Message
+#[derive(Debug)]
+pub struct ServerQuery {
+    pub session_id: i32,
+    pub token: Option<Vec<u8>>,
+    pub query: String,
+    pub parameters: HashMap<String, OValue>,
+    pub named: bool,
+    pub language: String,
+    pub mode: i8,
+    pub page_size: i32,
+}
+
+impl ServerQuery {
+    #[allow(clippy::too_many_arguments)]
+    pub fn new<T>(
+        session_id: i32,
+        token: Option<Vec<u8>>,
+        query: T,
+        parameters: HashMap<String, OValue>,
+        named: bool,
+        language: T,
+        mode: i8,
+        page_size: i32,
+    ) -> ServerQuery
+    where
+        T: Into<String>,
+    {
+        ServerQuery {
+            session_id,
+            token,
+            query: query.into(),
+            parameters,
+            named,
+            language: language.into(),
+            mode,
+            page_size,
+        }
+    }
+}
+
+impl From<ServerQuery> for Request {
+    fn from(input: ServerQuery) -> Request {
+        Request::ServerQuery(input)
+    }
+}
+
 #[derive(Debug)]
 pub enum Request {
     HandShake(HandShake),
@@ -354,6 +401,7 @@ pub enum Request {
     CreateDB(CreateDB),
     ExistDB(ExistDB),
     DropDB(DropDB),
+    ServerQuery(ServerQuery),
     Open(Open),
     Query(Query),
     LiveQuery(LiveQuery),

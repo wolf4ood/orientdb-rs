@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "*"
+  workflow_dispatch:
   pull_request:
     branches:
       - master
@@ -16,13 +17,13 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         rust: [stable]
-        orientdb-server: [3.1.11]
+        orientdb-server: [3.2.34]
     steps:
 
       - uses: actions/checkout@v2
       - name: Starting OrientDB Server
         run: |
-          docker-compose -f ./docker-compose/docker-compose.yaml up -d 
+          docker compose -f ./docker-compose/docker-compose.yaml up -d 
         env: 
           ORIENTDB_VERSION: ${{ matrix.orientdb-server }}
 

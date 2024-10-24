@@ -1,12 +1,16 @@
 use super::network::cluster::AsyncConnection;
 use super::network::cluster::{Cluster, Server};
 use super::session::{OSession, SessionPool, SessionPoolManager};
+use crate::asynchronous::server_statement::ServerStatement;
+use crate::asynchronous::types::resultset::ServerResultSet;
 use crate::common::protocol::messages::request::{
     Close, Connect, CreateDB, DropDB, ExistDB, MsgHeader, Open,
 };
 use crate::common::protocol::messages::response;
+use crate::common::types::result::OResult;
 use crate::common::ConnectionOptions;
 use crate::{DatabaseType, OrientResult};
+use futures::Stream;
 use std::future::Future;
 use std::net::SocketAddr;
 use std::net::ToSocketAddrs;
@@ -202,6 +206,36 @@ impl OrientDBClientInternal {
                 .await?
                 .payload();
             Ok((conn, ()))
+        })
+        .await
+    }
+
+    pub async fn execute(
+        &self,
+        user: &str,
+        password: &str,
+        query: &str,
+    ) -> OrientResult<ServerStatement> {
+        Ok(ServerStatement::new(
+            self,
+            user.to_string(),
+            password.to_string(),
+            query.to_string(),
+        ))
+    }
+
+    pub(crate) async fn run(
+        &self,
+        stmt: ServerStatement<'_>,
+    ) -> OrientResult<impl Stream<Item = OrientResult<OResult>>> {
+        let user = stmt.user.clone();
+        let pwd = stmt.password.clone();
+        self.run_as_admin(&user, &pwd, move |session, mut conn| async move {
+            let response: response::ServerQuery = conn
+                .send(stmt.into_query(session.session_id, session.token).into())
+                .await?
+                .payload();
+            Ok((conn, ServerResultSet::new(response)))
         })
         .await
     }

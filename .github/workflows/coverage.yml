@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+  workflow_dispatch:
   pull_request:
     branches:
         - master
@@ -16,14 +17,14 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         rust: [nightly]
-        orientdb-server: [3.1.11]
+        orientdb-server: [3.2.34]
     steps:
 
 
       - uses: actions/checkout@v2
       - name: Starting Gremlin Servers
         run: |
-          docker-compose -f ./docker-compose/docker-compose.yaml up -d
+          docker compose -f ./docker-compose/docker-compose.yaml up -d
         env:
           ORIENTDB_VERSION: ${{ matrix.orientdb-server }}
 

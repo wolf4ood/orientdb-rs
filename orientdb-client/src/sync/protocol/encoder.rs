@@ -1,7 +1,7 @@
 use crate::common::protocol::buffer::OBuffer;
 use crate::common::protocol::messages::request::{
     Close as ReqClose, Connect, CreateDB, DropDB, ExistDB, HandShake, LiveQuery, Open as ReqOpen,
-    Query as ReqQuery, QueryClose, QueryNext, UnsubscribeLiveQuery,
+    Query as ReqQuery, QueryClose, QueryNext, ServerQuery, UnsubscribeLiveQuery,
 };
 
 use crate::OrientError;
@@ -22,4 +22,5 @@ pub trait VersionedEncoder {
     fn encode_create_db(buf: &mut OBuffer, close: CreateDB) -> Result<(), OrientError>;
     fn encode_exist_db(buf: &mut OBuffer, close: ExistDB) -> Result<(), OrientError>;
     fn encode_drop_db(buf: &mut OBuffer, close: DropDB) -> Result<(), OrientError>;
+    fn encode_server_query(buf: &mut OBuffer, query: ServerQuery) -> Result<(), OrientError>;
 }

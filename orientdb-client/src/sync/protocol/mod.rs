@@ -57,6 +57,7 @@ impl WiredProtocol {
             Request::CreateDB(create) => T::encode_create_db(&mut buffer, create),
             Request::ExistDB(exist) => T::encode_exist_db(&mut buffer, exist),
             Request::DropDB(drop) => T::encode_drop_db(&mut buffer, drop),
+            Request::ServerQuery(query) => T::encode_server_query(&mut buffer, query),
             Request::Close(close) => T::encode_close(&mut buffer, close),
             Request::Query(query) => T::encode_query(&mut buffer, query),
             Request::LiveQuery(query) => T::encode_live_query(&mut buffer, query),
@@ -97,6 +98,7 @@ impl WiredProtocol {
                 45 => T::decode_query(buf)?.into(),
                 46 => T::decode_query_close(buf)?.into(),
                 47 => T::decode_query(buf)?.into(),
+                50 => T::decode_server_query(buf)?.into(),
                 _ => panic!("Request {} not supported", header.op),
             },
         };
