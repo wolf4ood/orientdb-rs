@@ -307,6 +307,7 @@ impl From<mobc::Error<OrientError>> for OrientError {
             mobc::Error::Inner(e) => e,
             mobc::Error::BadConn => OrientError::Generic(String::from("Async pool bad connection")),
             mobc::Error::Timeout => OrientError::Generic(String::from("Async pool timeout")),
+            mobc::Error::PoolClosed => OrientError::Generic(String::from("Async pool closed")),
         }
     }
 }
